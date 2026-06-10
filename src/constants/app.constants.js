@@ -1,0 +1,24 @@
+const APP_NAME = 'Soil Project';
+const APP_SHORT_NAME = 'SOL';
+
+const INVENTORY_TYPES = [
+  "residential", "commercial","appartment"
+];
+
+//Prefixes for auto increment IDs
+const PREFIX_PROJECT_AUTOINCREMENTID = `PT-${APP_SHORT_NAME}-`;
+const PREFIX_SECTOR_AUTOINCREMENTID = `SE-${APP_SHORT_NAME}-`;
+const PREFIX_INVENTORY_AUTOINCREMENTID = `INV-${APP_SHORT_NAME}-`;
+
+const NUMBERS_DIR = "numbers";
+
+
+module.exports = {
+    APP_NAME, APP_SHORT_NAME,
+    PREFIX_PROJECT_AUTOINCREMENTID,
+    PREFIX_SECTOR_AUTOINCREMENTID,
+    PREFIX_INVENTORY_AUTOINCREMENTID,
+    INVENTORY_TYPES,
+    NUMBERS_DIR
+
+};
