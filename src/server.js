@@ -52,7 +52,10 @@ app.use("/", loggingMiddlewares.respondNoResourceFound);
 app.use("/", require("./middlewares/errorHandler"));
 
 
+module.exports = app;
+
 // initialize scoket
+if (process.env.NODE_ENV !== "production") {
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 4949;
@@ -70,3 +73,4 @@ const gracefulShutdown = async () => {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+}
