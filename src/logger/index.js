@@ -1,62 +1,60 @@
 const { createLogger, format, transports } = require("winston");
 
-require("dotenv").config();
+const { combine, timestamp, label, json, prettyPrint } = format;
 
 module.exports = (prefix) => {
-  const formatConf = format.combine(
-    format.label({ label: prefix }),
-    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    format.json(),
-    format.prettyPrint()
+  const formatConf = combine(
+    label({ label: prefix }),
+    timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    json(),
+    prettyPrint()
   );
 
+  // 🔥 Production = Console only (Vercel safe)
   const isProduction = process.env.NODE_ENV === "production";
 
-  const getTransport = (level, fileName) => {
+  const createTransport = (level, filename) => {
     if (isProduction) {
-      return new transports.Console({
-        level,
-      });
+      return new transports.Console({ level });
     }
 
+    // Local development only
     return new transports.File({
       level,
-      filename: `src/logs/${fileName}`,
+      filename: `src/logs/${filename}`,
     });
   };
 
   const infoLogger = createLogger({
-    transports: [
-      getTransport("info", process.env.INFO_LOG_FILE),
-    ],
+    transports: [createTransport("info", "info.log")],
     format: formatConf,
   });
 
   const errLogger = createLogger({
-    transports: [
-      getTransport("error", process.env.ERROR_LOG_FILE),
-    ],
+    transports: [createTransport("error", "error.log")],
     format: formatConf,
   });
 
   const warnLogger = createLogger({
-    transports: [
-      getTransport("warn", process.env.WARN_LOG_FILE),
-    ],
+    transports: [createTransport("warn", "warn.log")],
     format: formatConf,
   });
 
   const queueLogger = createLogger({
-    transports: [
-      getTransport("info", process.env.QUEUE_LOG_FILE),
-    ],
+    transports: [createTransport("info", "queue.log")],
     format: formatConf,
   });
 
   return {
     info: (msg) => infoLogger.info(msg),
-    error: (msg) => errLogger.error(msg),
+
+    error: (msg) => {
+      console.log({ error: msg });
+      errLogger.error(msg);
+    },
+
     warn: (msg) => warnLogger.warn(msg),
+
     queue: (msg) => queueLogger.info(msg),
 
     printRequest(req, res, next) {
@@ -64,14 +62,13 @@ module.exports = (prefix) => {
 
       let msg = `${method} ${originalUrl}`;
 
-      if (Object.keys(body || {}).length) {
-        const bodyToPrint = { ...body };
+      if (body && Object.keys(body).length) {
+        const cleanBody = { ...body };
 
-        if (bodyToPrint.image) bodyToPrint.image = 1;
-        if (bodyToPrint.images)
-          bodyToPrint.images = bodyToPrint.images.length;
+        if (cleanBody.image) cleanBody.image = 1;
+        if (cleanBody.images) cleanBody.images = cleanBody.images.length;
 
-        msg += ` | body: ${JSON.stringify(bodyToPrint)}`;
+        msg += ` | body: ${JSON.stringify(cleanBody)}`;
       }
 
       infoLogger.info(msg);
