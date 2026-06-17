@@ -67,31 +67,48 @@ exports.updateSite = catchAsync(async (req, res, next) => {
 // Remove site entry record completely
 exports.deleteSite = handlerFactory.deleteOne(Site, logger);
 
-exports.getSiteMaterials = catchAsync(async (req, res, next) => {
-  const { clientId, siteId } = req.params;
 
-  const site = await Site.findOne({
-    _id: siteId,
-    client: clientId,
-  }).select("siteName materialsRates");
+exports.getSitesWithMaterialByClient = catchAsync(async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  if (!site) {
-    return next(
-      new AppError(
-        "Site not found against the selected client.",
-        404
-      )
-    );
+    const sites = await Site.find({ 
+      client: id, 
+      status: "Active" 
+    }).select("siteName  materialsRates "); 
+
+    if (!sites || sites.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No active sites found for this client.",
+      });
+    }
+
+    sendSuccessResponse(res,200,logger,{
+      message:"clients sites data",
+      docs:sites
+    })
+  } catch (error) {
+
+    return next(new AppError(error.message, 500));
+
+  }
+})
+
+
+exports.getSitesByClient = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const entries = await Site.find({ client: id })
+    .populate("client","name image ")
+    .sort({ date: -1 });
+
+  if (!entries || entries.length === 0) {
+    return next(new AppError("No data records found for this designated client.", 404));
   }
 
-  sendSuccessResponse(
-    res,
-    200,
-    {
-      siteId: site._id,
-      siteName: site.siteName,
-      materials: site.materialsRates,
-    },
-    "Site materials fetched successfully."
-  );
+  sendSuccessResponse(res, 200, logger, {
+    message: "Client sites fetched successfully.",
+    docs: entries
+  });
 });

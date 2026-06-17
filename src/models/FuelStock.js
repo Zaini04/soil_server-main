@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
 
-const fuelSchema = new mongoose.Schema(
+const fuelStockSchema = new mongoose.Schema(
   {
     fuelCompany: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'FuelCompany',
       required: [true, "Fuel company name is required."],
-      trim: true,
+      
     },
-    fuelLitters: {
+    fuelLiters: {
       type: Number,
       required: [true, "Fuel volume in liters is required."],
       min: [0, "Fuel liters cannot be negative."],
@@ -19,5 +20,5 @@ const fuelSchema = new mongoose.Schema(
   }
 );
 
-const Fuel = mongoose.model("Fuel", fuelSchema);
-module.exports = Fuel;
+const FuelStock = mongoose.model("FuelStock", fuelStockSchema);
+module.exports = FuelStock;

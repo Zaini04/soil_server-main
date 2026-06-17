@@ -77,3 +77,20 @@ exports.updateVehicle = catchAsync(async (req, res, next) => {
 
 // Delete vehicle from registry
 exports.deleteVehicle = handlerFactory.deleteOne(Vehicle, logger);
+
+exports.getVehicleDropdownList = async (req, res, next) => {
+  try {
+    const vehicles = await Vehicle.find({ status: "Active" }) 
+      .select("_id vehicleNo")
+      .lean();
+
+  
+     sendSuccessResponse(res,200,logger,{
+      message:"clients dropdown list",
+      docs:vehicles
+    })
+    
+  } catch (error) {
+        return next(new AppError(error.message, 500));
+  }
+};

@@ -63,12 +63,14 @@ const GETJoiSiteSchema = Joi.object({
     sortBy: sortBy.optional(),
     fields: fields.optional(),
     limit: limit.optional(),
-  client: client.optional(),
-  siteName: siteName.optional(),
+    name:Joi.string().optional().allow(''),
+        date:Joi.string().optional().allow(""),
+  client: Joi.string().optional().allow(''),
+  siteName: Joi.string().optional().allow(""),
   address: address.optional(),
   image: image,
   materialsRates: Joi.array().items(materialRateItemSchema).optional(),
-  status: status.optional()
+  status: Joi.string().optional().allow('')
 });
 
 const siteValidation = POSTJoiSiteSchema;

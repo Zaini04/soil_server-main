@@ -5,6 +5,7 @@ const { clientValidation, GETJoiClientSchema, PATCHJoiClientSchema } = require("
 const catchAsync = require('../utils/catchAsync');
 const logger = require("../logger")("Client_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
+const EntryVehicle = require("../models/entryVehicleModal");
 
 exports.addClient = catchAsync(async (req, res, next) => {
     try {
@@ -90,18 +91,49 @@ exports.updateClient = catchAsync(async (req, res, next) => {
 exports.deleteClient = handlerFactory.deleteOne(Client, logger);
 
 
-// Sirf drop-down menu k liye minimal data load krna
 exports.getClientDropdownList = async (req, res, next) => {
   try {
-    const clients = await Client.find({ status: "Active" }) // optional: sirf active clients dikhane k liye
+    const clients = await Client.find({ status: "Active" }) 
       .select("_id name")
-      .lean(); // lean() query ko fast kr deta hai kyunki ye poori mongoose doc ki jga plain JS object deta hai
+      .lean();
 
-    res.status(200).json({
-      success: true,
-      data: clients,
-    });
+  
+     sendSuccessResponse(res,200,logger,{
+      message:"clients dropdown list",
+      docs:clients
+    })
+    
   } catch (error) {
-    next(error);
+        return next(new AppError(error.message, 500));
   }
 };
+
+
+
+exports.getClientSummary = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const entries = await EntryVehicle.find({ client: id });
+
+  if (!entries || entries.length === 0) {
+    return next(new AppError("No records found for this client.", 404));
+  }
+
+  const summary = entries.reduce((acc, entry) => {
+    acc.totalRate += entry.totalRate || 0;
+    acc.totalReceived += entry.payment?.amountReceived || 0;
+    acc.totalDue += entry.clientDue || 0;
+    acc.totalAdvance += entry.clientAdvance || 0;
+    return acc;
+  }, {
+    totalRate: 0,
+    totalReceived: 0,
+    totalDue: 0,
+    totalAdvance: 0,
+  });
+
+  sendSuccessResponse(res, 200, logger, {
+    message: "Client summary fetched successfully.",
+    summary,
+  });
+});

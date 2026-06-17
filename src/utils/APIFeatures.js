@@ -6,12 +6,26 @@ class APIFeatures {
 
     filter() {
         let queryObj = { ...this.queryStr };
-        const excludeFields = ['sort', 'limit', 'page', 'fields'];
+        const excludeFields = ['sort', 'limit', 'page', 'fields','clientName','searchdate'];
         excludeFields.forEach((el) => delete queryObj[el]);
     
         let queryStr = {};
     
         // Handle other conditions 
+        if(queryObj.fuelLiters){
+            queryStr.fuelLiters = queryObj.fuelLiters
+        }
+         if (queryObj.vehicle) {
+    queryStr.vehicle = queryObj.vehicle;
+  }
+         if (queryObj.client) {
+    queryStr.client = queryObj.client;
+  }
+
+ 
+        if(queryObj.fuelCompany){
+            queryStr.fuelCompany = queryObj.fuelCompany
+        }
         if (queryObj.status) {
             queryStr.status = queryObj.status;
         }
@@ -21,10 +35,13 @@ class APIFeatures {
         if(queryObj.vehicleNo){
             queryStr.vehicleNo=queryObj.vehicleNo
         }
+        
         if(queryObj.name){
             queryStr.name = queryObj.name
         }
-
+        if(queryObj.siteName){
+            queryStr.siteName = queryObj.siteName
+        }
         if (queryObj.autoIncrementId !== undefined) {
             queryStr.autoIncrementId = queryObj.autoIncrementId;
         }

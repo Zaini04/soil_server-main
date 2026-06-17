@@ -6,10 +6,6 @@ const fuelCompany = Joi.string().trim().min(2).max(100).messages({
   "string.min": "Fuel company name must be at least 2 characters long."
 });
 
-const fuelLiters = Joi.number().positive().allow(0).messages({
-  "number.base": "Fuel liters must be a valid numeric value.",
-  "number.positive": "Fuel volume cannot be a negative value."
-});
 
 
 
@@ -19,25 +15,18 @@ const fuelLiters = Joi.number().positive().allow(0).messages({
 // --- Schemas exported for the Fuel Controller ---
 
 // Used for POST /fuel/add_fuel
-const POSTJoiFuelSchema = Joi.object({
+const POSTJoiFuelCompanySchema = Joi.object({
   fuelCompany: fuelCompany.required(),
-  fuelLiters: fuelLiters.required(),
 });
 
 // Used for PUT/PATCH /fuel/update_fuel/:id
-const PATCHJoiFuelSchema = Joi.object({
+const PATCHJoiFuelCompanySchema = Joi.object({
   fuelCompany: fuelCompany.optional(),
-  fuelLiters: fuelLiters.optional(),
 });
 
-const GETJoiFuelSchema = Joi.object({
+const GETJoiFuelCompanySchema = Joi.object({
     fuelCompany: Joi.string().optional().allow(""),
-  fuelLiters: Joi.string().optional().allow(""),
-    vehicleNo: Joi.string().optional().allow(""),
-    vehicle: Joi.string().optional().allow(""),
-  
     keyword: Joi.string().optional().allow(""),
-    date:Joi.string().optional().allow(""),
     from: Joi.date().optional(),
     to: Joi.date().optional(),
     page: Joi.number().optional(),
@@ -48,7 +37,7 @@ const GETJoiFuelSchema = Joi.object({
 
 
 module.exports = {
-  POSTJoiFuelSchema,
-  PATCHJoiFuelSchema,
-    GETJoiFuelSchema
+  POSTJoiFuelCompanySchema,
+  PATCHJoiFuelCompanySchema,
+    GETJoiFuelCompanySchema
 };
