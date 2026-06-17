@@ -1,5 +1,7 @@
 const { createLogger, format, transports } = require("winston");
 const { combine, timestamp, label, json, prettyPrint } = format;
+const fs = require("fs");
+const path = require("path");
 
 module.exports = (prefix) => {
   const formatConf = combine(
@@ -9,23 +11,25 @@ module.exports = (prefix) => {
     prettyPrint()
   );
 
-  const isProduction = process.env.NODE_ENV === "production";
+  // /var/task = Lambda/deployment — file system read only hai
+  // Sirf local machine par file transport use karo
+  const canWriteFiles = (() => {
+    try {
+      const logDir = path.join(process.cwd(), "src/logs");
+      fs.mkdirSync(logDir, { recursive: true });
+      return logDir;
+    } catch (e) {
+      return null;  // write nahi ho sakta — console use karo
+    }
+  })();
 
   const createTransport = (level, filename) => {
-    if (isProduction) {
-      return new transports.Console({ level });  // ✅ file nahi, console only
+    if (!canWriteFiles) {
+      return new transports.Console({ level });
     }
-
-    // Local — directory pehle banao
-    const fs = require("fs");
-    const logDir = "src/logs";
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });  // ✅ auto create
-    }
-
     return new transports.File({
       level,
-      filename: `${logDir}/${filename}`,
+      filename: path.join(canWriteFiles, filename),
     });
   };
 
