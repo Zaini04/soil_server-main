@@ -13,7 +13,14 @@ const loggingMiddlewares = require("./middlewares/loggingMiddlewares.js");
 
 connectDB();
 
-const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+const allowedOrigins = (() => {
+  try {
+    return JSON.parse(process.env.ALLOWED_ORIGINS);
+  } catch (e) {
+    // Comma separated string fallback
+    return process.env.ALLOWED_ORIGINS?.split(",").map(o => o.trim()) || [];
+  }
+})();
 const corsOptions = {
     origin : function (origin , callback ) {
         if (allowedOrigins.includes(origin) || !origin) {
