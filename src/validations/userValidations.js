@@ -20,8 +20,8 @@ const {
     dateOfBirth,
 } = require("./baseJoiSchemas");
 
-const userStatus = status.valid('active', 'blocked', 'deleted').messages({
-    'any.only': 'User status must be one of: active, blocked, deleted.',
+const userStatus = status.valid('Active', 'Blocked', 'Deleted').messages({
+    'any.only': 'User status must be one of: Active, Blocked and Deleted.',
 });
 
 const role = objectId.messages({

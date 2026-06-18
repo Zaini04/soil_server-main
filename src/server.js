@@ -16,8 +16,6 @@ connectDB();
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map(o => o.trim()) || [];
 const corsOptions = {
     origin : function (origin , callback ) {
-          console.log("CORS origin:", origin);  // ← add karo
-    console.log("Allowed:", allowedOrigins);  // ← add karo
         if (allowedOrigins.includes(origin) || !origin) {
             callback(null , true)
         }else {
