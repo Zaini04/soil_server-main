@@ -13,7 +13,7 @@ const loggingMiddlewares = require("./middlewares/loggingMiddlewares.js");
 
 connectDB();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
 const corsOptions = {
     origin : function (origin , callback ) {
         if (allowedOrigins.includes(origin) || !origin) {
