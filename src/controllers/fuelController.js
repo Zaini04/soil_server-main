@@ -128,7 +128,7 @@ exports.getEntryFuels = catchAsync(async (req, res, next) => {
 
   // Default specific fields — frontend override kar sakta hai
   if (!req.query.fields) {
-    req.query.fields = "createdAt,vehicle,fuelCompany,dieselInLitters,dieselCost";
+    req.query.fields = "_id,createdAt,vehicle,fuelCompany,dieselInLitters,dieselCost";
   }
 
   handlerFactory.getAll(

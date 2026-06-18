@@ -244,3 +244,28 @@ exports.recordPayment = catchAsync(async (req, res, next) => {
     doc: updatedEntry
   });
 });
+
+
+
+
+exports.getIncomeExpense = catchAsync(async (req, res, next) => {
+  const { value: validQuery, error } = GETJoiEntryVehicleSchema.validate(req.query);
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+  req.query = validQuery;
+
+  // Default specific fields — frontend override kar sakta hai
+  if (!req.query.fields) {
+    req.query.fields = "_id,createdAt,vehicle, totalRate,remainingAmount";
+  }
+
+  handlerFactory.getAll(
+    EntryVehicle,
+    [
+      { path: "vehicle", select: "vehicleNo typeVehicle" },
+    ],
+    logger,
+    {}
+  )(req, res, next);
+});
