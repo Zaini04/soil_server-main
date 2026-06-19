@@ -120,7 +120,6 @@ const vehicleEntrySchema = new mongoose.Schema(
       fuelCompany: {
       type: mongoose.Schema.Types.ObjectId,  // ✅ String → ObjectId
       ref: 'FuelCompany',                    // ✅ ref add kiya
-      default: null,                         // ✅ "" ki jagah null
   },
       note: {
         type: String, // Extra details, partial/full payment info, ya other description ke liye
@@ -186,6 +185,12 @@ vehicleEntrySchema.pre("save", function (next) {
   }
 
   next();
+});
+
+vehicleEntrySchema.index({
+  createdAt: -1,
+  client: 1,
+  site: 1,
 });
 
 const EntryVehicle = mongoose.model("EntryVehicle", vehicleEntrySchema);

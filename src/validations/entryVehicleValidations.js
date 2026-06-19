@@ -10,7 +10,7 @@ const paymentJoiObject = Joi.object({
   amountReceived: Joi.number().min(0).default(0),
   checkNo: Joi.string().allow("", null).default(""),
   fuelLiters: Joi.number().min(0).default(0),
-  fuelCompany: Joi.string().allow("", null).default(""),
+  fuelCompany: Joi.string().allow("", null).default(null),
   note: Joi.string().allow("", null).default("")
 });
 
@@ -45,9 +45,9 @@ const POSTJoiEntryVehicleSchema = Joi.object({
   materialCost: Joi.number().min(0).default(0),
   dieselCost: Joi.number().min(0).default(0),
   dieselInLitters: Joi.number().min(0).default(0),
-  fuelCompany:  Joi.string().regex(objectIdRegEx).required().messages({
-    "string.pattern.base": "Invalid Client Reference ID.",
-    "any.required": "Client selection is required."
+  fuelCompany: Joi.string().trim().regex(objectIdRegEx).required().messages({
+    "string.pattern.base": "Invalid Fuel Company Reference ID.",
+    "any.required": "Fuel Company selection is required."
   }),
   isStockManaged:Joi.boolean().default(false),
   driverExpense: Joi.number().min(0).default(0),

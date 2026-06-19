@@ -12,6 +12,7 @@ const { sendSuccessResponse } = require("../utils/helpers");
 const Client = require("../models/clientModel");
 const Vehicle = require("../models/vehicleModel");
 const FuelStock = require("../models/FuelStock");
+const APIFeatures = require("../utils/APIFeatures");
 
 const logger = require("../logger")("EntryVehicle_CONTROLLER");
 
@@ -19,12 +20,15 @@ const logger = require("../logger")("EntryVehicle_CONTROLLER");
 
 // @route    POST /api/entry-vehicles
 exports.entryVehicle = catchAsync(async (req, res, next) => {
+  console.log(req.body)
+
   const { value: validData, error } = POSTJoiEntryVehicleSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
   const { fuelCompany, dieselInLitters, isStockManaged } = validData;
+
 
   // Sirf stock managed company ka check karo
   if (fuelCompany && dieselInLitters > 0 && isStockManaged) {
@@ -268,4 +272,61 @@ exports.getIncomeExpense = catchAsync(async (req, res, next) => {
     logger,
     {}
   )(req, res, next);
+});
+
+
+exports.getIncomeSummary = catchAsync(async (req, res, next) => {
+  const { value: validQuery, error } =
+    GETJoiEntryVehicleSchema.validate(req.query);
+
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.query = validQuery;
+
+  const features = new APIFeatures(
+    EntryVehicle.find(),
+    req.query
+  ).filter();
+
+  const matchStage = features.queryObj || {};
+
+  const result = await EntryVehicle.aggregate([
+    {
+      $match: matchStage,
+    },
+    {
+      $group: {
+        _id: null,
+
+        totalRateSum: { $sum: "$totalRate" },
+        remainingAmountSum: { $sum: "$remainingAmount" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalRateSum: 1,
+        remainingAmountSum: 1,
+
+        // expense calculation
+        totalExpense: {
+          $subtract: ["$totalRateSum", "$remainingAmountSum"],
+        },
+
+      },
+    },
+  ]);
+
+  sendSuccessResponse(res,200,logger,{
+    message:"total expense fetch successfully",
+    docs:result[0] || {
+      totalRateSum: 0,
+      remainingAmountSum: 0,
+      totalExpense: 0,
+    },
+  })
+
+ 
 });
