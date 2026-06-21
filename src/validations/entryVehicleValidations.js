@@ -70,8 +70,8 @@ const POSTJoiEntryVehicleSchema = Joi.object({
 
 const GETJoiEntryVehicleSchema = Joi.object({
   keyword: keyword.optional(),
-  from: from.optional(),
-  to: to.optional(),
+  from: from.optional().allow(''),
+  to: to.optional().allow(''),
   sort: sort.optional(),
   sortBy: sortBy.optional(),
   page: page.optional(),

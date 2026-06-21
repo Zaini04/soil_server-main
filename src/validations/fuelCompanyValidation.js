@@ -27,8 +27,8 @@ const PATCHJoiFuelCompanySchema = Joi.object({
 const GETJoiFuelCompanySchema = Joi.object({
     fuelCompany: Joi.string().optional().allow(""),
     keyword: Joi.string().optional().allow(""),
-    from: Joi.date().optional(),
-    to: Joi.date().optional(),
+    from: Joi.date().optional().allow(''),
+    to: Joi.date().optional().allow(''),
     page: Joi.number().optional(),
     pageSize: Joi.number().optional(),
     sort: Joi.string().optional(),

@@ -46,28 +46,34 @@ class APIFeatures {
             queryStr.autoIncrementId = queryObj.autoIncrementId;
         }
 
-        if (queryObj.date) {
-        const startOfDay = new Date(queryObj.date);
-        startOfDay.setUTCHours(0, 0, 0, 0);
-
-        const endOfDay = new Date(queryObj.date);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-
-        queryStr.createdAt = {
-            $gte: startOfDay,
-            $lte: endOfDay
-        };
+ // --- HANDLE DATE RANGE ---
+if (queryObj.from || queryObj.to) {
+    queryStr.createdAt = {};
+    
+    if (queryObj.from) {
+        const startDate = new Date(queryObj.from);
+        startDate.setUTCHours(0, 0, 0, 0);
+        queryStr.createdAt.$gte = startDate;
     }
+    
+    if (queryObj.to) {
+        const endDate = new Date(queryObj.to);
+        endDate.setUTCHours(23, 59, 59, 999);
+        queryStr.createdAt.$lte = endDate;
+    }
+}else if (queryObj.date) {
+    // Agar koi single date bheje (Puranay flow k liye fallback)
+    const startOfDay = new Date(queryObj.date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
-        if (queryObj.from || queryObj.to) {
-            queryStr.createdAt = {};
-            if (queryObj.from) {
-                queryStr.createdAt.$gte = new Date(queryObj.from);
-            }
-            if (queryObj.to) {
-                queryStr.createdAt.$lte = new Date(queryObj.to);
-            }
-        }
+    const endOfDay = new Date(queryObj.date);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    queryStr.createdAt = {
+        $gte: startOfDay,
+        $lte: endOfDay
+    };
+}
     
         if (queryObj.keyword) {
             const keywordQuery = {

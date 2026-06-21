@@ -79,10 +79,10 @@ const from = Joi.date().iso().messages({
   "any.required": "From date is required.",
 });
 
-const to = Joi.date().iso().greater(Joi.ref("from")).messages({
+const to = Joi.date().iso().min(Joi.ref("from")).messages({
   "date.base": "Invalid date.",
   "date.format": "Invalid date format.",
-  "date.greater": "To date should be later than from date.",
+  "date.min": "To date should be equal to or later than from date.",
   "any.required": "To date is required.",
 });
 

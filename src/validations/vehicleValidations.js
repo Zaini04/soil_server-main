@@ -14,8 +14,8 @@ const POSTJoiVehicleSchema = Joi.object({
 
 const GETJoiVehicleSchema = Joi.object({
     keyword: Joi.string().optional().allow(""),
-  from: Joi.date().optional(),
-  to: Joi.date().optional(),
+  from: Joi.date().optional().allow(''),
+  to: Joi.date().optional().allow(''),
   page: Joi.number().optional(),
   pageSize: Joi.number().optional(),
   sort: Joi.string().optional(),

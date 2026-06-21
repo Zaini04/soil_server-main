@@ -49,8 +49,8 @@ const PATCHJoiSchema = Joi.object({
 
 const GETJoiSchema = Joi.object({
     keyword: keyword.optional(),
-    from: from.optional(),
-    to: to.optional(),
+    from: from.optional().allow(''),
+    to: to.optional().allow(''),
     page: page.optional(),
     pageSize: pageSize.optional(),
     sort: sort.optional(),

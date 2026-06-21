@@ -88,8 +88,8 @@ const PATCHJoiClientSchema = Joi.object({
 // GET Filter Validation Schema
 const GETJoiClientSchema = Joi.object({
     keyword: keyword.optional(),
-    from: from.optional(),
-    to: to.optional(),
+    from: from.optional().allow(''),
+    to: to.optional().allow(''),
     page: page.optional(),
     pageSize: pageSize.optional(),
     sort: sort.optional(),

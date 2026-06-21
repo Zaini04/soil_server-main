@@ -291,6 +291,10 @@ exports.getIncomeSummary = catchAsync(async (req, res, next) => {
   ).filter();
 
   const matchStage = features.queryObj || {};
+  const mongoose = require('mongoose');
+if (matchStage.vehicle) {
+    matchStage.vehicle = new mongoose.Types.ObjectId(matchStage.vehicle);
+}
 
   const result = await EntryVehicle.aggregate([
     {
@@ -330,3 +334,158 @@ exports.getIncomeSummary = catchAsync(async (req, res, next) => {
 
  
 });
+
+
+
+exports.dashboard = catchAsync(async(req,res,nex)=>{
+  const { value: validQuery, error } =
+    GETJoiEntryVehicleSchema.validate(req.query);
+
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.query = validQuery;
+
+    const features = new APIFeatures(
+    EntryVehicle.find(),
+    req.query
+  ).filter();
+
+  const matchStage = features.queryObj || {};
+
+  const dashboard = await EntryVehicle.aggregate([
+    {
+      $match:matchStage
+    },
+    {
+      $group:{
+        _id:null,
+        totalRates:{$sum:"$totalRate"},
+        totalDue:{$sum:"$clientDue"},
+        totalReceived:{$sum:"$payment.amountReceived"},
+        cashReceived: {
+        $sum: {
+          $cond: [
+            { $eq: ["$payment.method", "cash"] },
+            "$payment.amountReceived",
+            0,
+          ],
+        },
+      },
+      fuelReceived:{
+        $sum:{
+          $cond:[
+            {$eq:["$payment.method","fuel"]},
+            "$payment.amountReceived",
+            0,
+          ]
+        }
+      },
+      checkReceived:{
+        $sum:{
+          $cond:[
+            {$eq:["$payment.method","check"]},
+            "$payment.amountReceived",
+            0,
+          ]
+        }
+      },
+      other:{
+        $sum:{
+          $cond:[
+            {$eq:["$payment.method","other"]},
+            "$payment.amountReceived",
+            0,
+          ]
+        }
+      },
+      
+      }
+    },
+    {
+      $project:{
+        _id:0,
+        totalRates:1,
+        totalDue:1,
+        totalReceived:1,
+        cashReceived:1,
+        checkReceived:1,
+        fuelReceived:1,
+        other:1
+      }
+    }
+  ])
+
+  sendSuccessResponse(res,200,logger,{
+    docs:dashboard[0] || {
+      totalRates:0,
+        totalDue:0,
+        totalReceived:0,
+        cashReceived:0,
+        checkReceived:0,
+        fuelReceived:0,
+        other:0
+    }
+  })
+
+})
+exports.todayDashboard = catchAsync(async(req,res,nex)=>{
+  const { value: validQuery, error } =
+    GETJoiEntryVehicleSchema.validate(req.query);
+
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.query = validQuery;
+
+    
+
+const startOfDay = new Date();
+startOfDay.setHours(0, 0, 0, 0);
+
+const endOfDay = new Date();
+endOfDay.setHours(23, 59, 59, 999);
+
+
+  const dashboard = await EntryVehicle.aggregate([
+    {
+      $match:{
+         date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+      }
+    },
+    {
+      $group:{
+        _id:null,
+        totalRates:{$sum:"$totalRate"},
+        totalProfit:{$sum:"$remainingAmount"},
+        totalReceived:{$sum:"$payment.amountReceived"},
+        totalOrders:{$sum:1}
+      
+      }
+    },
+    {
+      $project:{
+        _id:0,
+        totalRates:1,
+        totalProfit:1,
+        totalReceived:1,
+        totalOrders:1,
+      }
+    }
+  ])
+
+  sendSuccessResponse(res,200,logger,{
+    docs:dashboard[0] || {
+      totalRates:0,
+        totalProfit:0,
+        totalReceived:0,
+        totalOrders:0
+    }
+  })
+
+})
