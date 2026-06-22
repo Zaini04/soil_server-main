@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const IMG_DIR = require("../constants/imgDir.constants");
 const menus = require("../constants/menus.constants");
+const { editPrfoile } = require("../controllers/factories/userFactory");
 const {
     adminLogin,
     userLogin ,
@@ -26,7 +27,8 @@ const {
     adminUserRegister,
     dashboardStats,
     createRole,
-    getUserRoles
+    getUserRoles,
+    editProfile
 } = require("../controllers/userController");
 const upload = require("../middlewares/multer");
 const { printRequest } = require("../logger")("USER_CONTROLLER");
@@ -48,7 +50,8 @@ router.post("/forgot-password", printRequest, forgotPassword);
 router.post("/verify-otp", printRequest, verifyOtp);
 router.post("/resend-otp", printRequest, resendOtp);
 router.put("/reset-password", printRequest, resetPassword);
-router.put("/update-password", printRequest, protect, updatePassword);
+router.put("/update_password", printRequest, protect, updatePassword);
+router.put("/edit_profile",protect, editProfile);
 router.put("/save-fcm-token", printRequest, protect, saveFcmToken);
 router.post("/logout", printRequest, logout);
 router.post('/send-contact-message' , printRequest , sendContactEmail)

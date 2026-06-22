@@ -97,18 +97,10 @@ exports.getSitesWithMaterialByClient = catchAsync(async (req, res, next) => {
 
 
 exports.getSitesByClient = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
 
-  const entries = await Site.find({ client: id })
-    .populate("client","name image ")
-    .sort({ date: -1 });
+  const populateOptions = [
+    { path: "client", select: "name image" },
+  ];
 
-  if (!entries || entries.length === 0) {
-    return next(new AppError("No data records found for this designated client.", 404));
-  }
-
-  sendSuccessResponse(res, 200, logger, {
-    message: "Client sites fetched successfully.",
-    docs: entries
-  });
+  handlerFactory.getAllByField(Site,"client",populateOptions,logger)(req, res, next)
 });

@@ -423,11 +423,11 @@ if (usernameExist) {
     if (emailExist) {
         return next(
             new AppError(
-                    emailExist?.status === 'blocked'
+                    emailExist?.status === 'Blocked'
                     ? 
                         `Account with this email has been blocked. Please contact support.`
                     :
-                    emailExist?.status === 'deleted'
+                    emailExist?.status === 'Deleted'
                     ?
                         'Sorry, account with this email has been deactivated. Forgot your password to register again.'
                     :
@@ -687,6 +687,36 @@ exports.updatePassword = () => catchAsync(async (req, res, next) => {
     });
 });
 
+exports.editProfile = () => catchAsync(async (req, res, next) => {
+
+    const { image , username} = req.body;
+
+    if (!username) {
+        return next(new AppError("username is required.", 400));
+    }
+
+    const doc = await User.findById(req.user._id);
+
+    const existsUserName = await User.findOne({username:username})
+    if(existsUserName){
+        return next(new AppError("This username is already taken.", 400));
+
+    }
+
+    if(doc.username === username.trim()){
+        return next(new AppError("you have already this username.", 400));
+    }
+
+    doc.image = image || doc.image;
+    doc.username = username.trim();
+    await doc.save();
+
+    return sendSuccessResponse(res, 200, logger, {
+        message: "username updated successfully.",
+        doc:doc
+    });
+});
+
 exports.resetPassword = () => catchAsync(async (req, res, next) => {
     const { otp, newPassword, confirmPassword } = req.body;
     const user = await User.findOne({ "verification.resetPasswordToken": otp });
@@ -696,8 +726,8 @@ exports.resetPassword = () => catchAsync(async (req, res, next) => {
     user.password = newPassword;
     user.verification.resetPasswordToken = undefined;
     user.verification.resetPasswordTokenExpire = undefined;
-    if(user.status ==="deleted") {
-        user.status = "active"
+    if(user.status ==="Deleted") {
+        user.status = "Active"
     }
     await user.save();
     sendSuccessResponse(res, 200, logger, {

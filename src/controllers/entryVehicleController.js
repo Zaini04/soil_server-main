@@ -109,42 +109,64 @@ exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
 
 // @route    GET /api/entry-vehicles/client/:clientId
 exports.getEntriesByClient = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
 
-  const entries = await EntryVehicle.find({ client: id })
-    .populate("client","name phoneNumber city status")
-    .populate("site", "siteName")
-    .populate("vehicle", "vehicleNo typeVehicle")
-    .sort({ date: -1 });
+  // const { id } = req.params;
 
-  if (!entries || entries.length === 0) {
-    return next(new AppError("No data records found for this designated client.", 404));
-  }
+  // const entries = await EntryVehicle.find({ client: id })
+  //   .populate("client","name phoneNumber city status")
+  //   .populate("site", "siteName")
+  //   .populate("vehicle", "vehicleNo typeVehicle")
+  //   .sort({ date: -1 });
 
-  sendSuccessResponse(res, 200, logger, {
-    message: "Client vehicle history record logs fetched successfully.",
-    docs: entries
-  });
+  // if (!entries || entries.length === 0) {
+  //   return next(new AppError("No data records found for this designated client.", 404));
+  // }
+
+  // sendSuccessResponse(res, 200, logger, {
+  //   message: "Client vehicle history record logs fetched successfully.",
+  //   docs: entries
+  // });
+
+    const populateOptions = [
+    { path: "client", select: "name phoneNumber city status" },
+    { path: "site", select: "siteName" },
+    { path: "vehicle", select: "vehicleNo  typeVehicle" },
+  ];
+
+  handlerFactory.getAllByField(EntryVehicle,"client",populateOptions,logger)(req, res, next)
+
 });
 
 exports.getEntriesByVehicle = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  // const { id } = req.params;
 
-  const entries = await EntryVehicle.find({ vehicle: id })
-    .populate("site", "siteName")
-    .populate("vehicle","vehicleNo owner Name status typeVehicle")
-    .populate("client", "name")
-    .sort({ date: -1 });
+  // const entries = await EntryVehicle.find({ vehicle: id })
+  //   .populate("site", "siteName")
+  //   .populate("vehicle","vehicleNo ownerName status typeVehicle")
+  //   .populate("client", "name")
+  //   .sort({ date: -1 });
 
-  if (!entries || entries.length === 0) {
-    return next(new AppError("No data records found for this designated client.", 404));
-  }
+  // if (!entries || entries.length === 0) {
+  //   return next(new AppError("No data records found for this designated client.", 404));
+  // }
+  
 
-  sendSuccessResponse(res, 200, logger, {
-    message: "Client vehicle history record logs fetched successfully.",
-    docs: entries
-  });
+  // sendSuccessResponse(res, 200, logger, {
+  //   message: "Vehicle  history record  fetched successfully.",
+  //   docs: entries
+  // });
+
+  const populateOptions = [
+    { path: "client", select: "name" },
+    { path: "site", select: "siteName" },
+    { path: "vehicle", select: "vehicleNo ownerName status typeVehicle" },
+  ];
+
+  handlerFactory.getAllByField(EntryVehicle,"vehicle",populateOptions,logger)(req, res, next)
 });
+
+
+
 
 exports.generateBill = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -489,3 +511,82 @@ endOfDay.setHours(23, 59, 59, 999);
   })
 
 })
+
+exports.salesProfitChart = catchAsync(async (req, res, next) => {
+
+  const { value: validQuery, error } =
+    GETJoiEntryVehicleSchema.validate(req.query);
+
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.query = validQuery;
+  const year =  new Date().getFullYear();
+
+  const startDate = new Date(year, 0, 1); // Jan 1
+  const endDate = new Date(year + 1, 0, 1); // Next Jan 1
+
+  const monthlyData = await EntryVehicle.aggregate([
+    {
+      $match: {
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $month: "$date",
+        },
+
+        Revenue: {
+          $sum: "$totalRate",
+        },
+
+        Profit: {
+          $sum: "$remainingAmount",
+        },
+      },
+    },
+    {
+      $sort: {
+        "_id": 1,
+      },
+    },
+  ]);
+
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const chartData = months.map((month, index) => {
+    const found = monthlyData.find(
+      (item) => item._id === index + 1
+    );
+
+    return {
+      month,
+      Revenue: found?.Revenue || 0,
+      Profit: found?.Profit || 0,
+    };
+  });
+
+  sendSuccessResponse(res, 200, logger, {
+    message:"sales chart fetched successfully",
+    docs: chartData,
+  });
+});

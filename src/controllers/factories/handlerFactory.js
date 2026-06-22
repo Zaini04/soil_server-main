@@ -186,3 +186,37 @@ exports.removeFromDb = (Model , logger ) => catchAsync(async( req , res , next) 
         message : 'Deleted successfully.' ,
     })
 });
+
+
+exports.getAllByField = (
+  Model,
+  field,
+  populateItems = [],
+  logger
+) =>
+  catchAsync(async (req, res, next) => {
+    const value = req.params.id;
+
+    const features = new APIFeatures(
+      Model.find({ [field]: value }),
+      req.query
+    )
+      .filter()
+      .limitFields()
+      .sort()
+      .paginate();
+
+    const docs = await features.query.populate(populateItems);
+
+    const docsCount = await Model.countDocuments({
+      [field]: value,
+      ...features.queryObj,
+    });
+
+    sendSuccessResponse(res, 200, logger, {
+      docs,
+      page: features.page,
+      pages: Math.ceil(docsCount / features.pageSize),
+      docsCount,
+    });
+  });

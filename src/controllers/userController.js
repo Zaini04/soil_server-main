@@ -24,6 +24,7 @@ exports.verifyOtp = userFactory.verifyOtp();
 exports.resendOtp = userFactory.resendOtp();
 exports.getProfile = userFactory.profile();
 exports.updatePassword = userFactory.updatePassword();
+exports.editProfile = userFactory.editProfile();
 exports.forgotPassword = userFactory.forgotPassword();
 exports.resetPassword = userFactory.resetPassword();
 exports.saveFcmToken = userFactory.saveFcmToken();

@@ -1,4 +1,4 @@
-const { entryVehicle, getAllEntryVehicles, updateEntryVehicle, deleteEntryVehicle, getEntriesByVehicle, getEntriesByClient, generateBill, recordPayment, getIncomeExpense, getIncomeSummary, dashboard, todayDashboard } = require("../controllers/entryVehicleController");
+const { entryVehicle, getAllEntryVehicles, updateEntryVehicle, deleteEntryVehicle, getEntriesByVehicle, getEntriesByClient, generateBill, recordPayment, getIncomeExpense, getIncomeSummary, dashboard, todayDashboard, salesProfitChart } = require("../controllers/entryVehicleController");
 const { protect, checkActionAccess } = require("../middlewares/protect");
 const { printRequest } = require("../logger")("Vehicle_CONTROLLER");
 
@@ -12,5 +12,6 @@ router.get('/income_expense' ,protect, printRequest  , checkActionAccess("income
 router.get('/income_expense_summary' ,protect, printRequest  , checkActionAccess("income-expense","view") , getIncomeSummary);
 router.get('/dashboard' ,protect, printRequest  , checkActionAccess("dashboard","view") , dashboard);
 router.get('/today_dashboard' ,protect, printRequest  , checkActionAccess("dashboard","view") , todayDashboard);
+router.get('/sales_profit_chart' ,protect, printRequest  , checkActionAccess("dashboard","view") , salesProfitChart);
 
 module.exports = router;
