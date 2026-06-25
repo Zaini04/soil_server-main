@@ -1,5 +1,5 @@
 const { getEntriesByVehicle } = require("../controllers/entryVehicleController");
-const { addVehicle, getAllVehiles, updateVehicle, deleteVehicle, getVehicleDropdownList } = require("../controllers/vehicleController");
+const { addVehicle, getAllVehiles, updateVehicle, deleteVehicle, getVehicleDropdownList, getVehicle } = require("../controllers/vehicleController");
 const { protect, checkActionAccess } = require("../middlewares/protect");
 const { printRequest } = require("../logger")("Vehicle_CONTROLLER");
 
@@ -11,6 +11,7 @@ router.get('/vehicles_list' ,protect, printRequest  , checkActionAccess("vehicle
 router.get('/ledger/:id' ,protect, printRequest  , checkActionAccess("vehicle","view") , getEntriesByVehicle);
 
 router.route('/:id')
+    .get(printRequest , protect , checkActionAccess("vehicles","view"),getVehicle )
     .put(printRequest , protect , checkActionAccess("vehicles","update"),updateVehicle )
     .delete(printRequest , protect , checkActionAccess("vehicles","delete"), deleteVehicle )
 module.exports = router;

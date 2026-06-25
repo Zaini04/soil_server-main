@@ -94,3 +94,20 @@ exports.getVehicleDropdownList = async (req, res, next) => {
         return next(new AppError(error.message, 500));
   }
 };
+
+exports.getVehicle = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const doc =  await Vehicle.findById(id).select('vehicleNo status ownerName typeVehicle')
+
+  if(!doc){
+    return next(new AppError("No records found for this client.", 404));
+  }
+
+  sendSuccessResponse(res,200,logger,{
+    message:"Client fetched successfully",
+    doc:doc
+  })
+
+}
+)

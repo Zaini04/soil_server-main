@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs');
 const APIFeatures = require('../../utils/APIFeatures');
 const uploadImage = require('../../utils/uploadImage');
 const { uploadBase64Image } = require('../../utils/uploadFiles');
+const Client = require('../../models/clientModel');
+const FuelCompany = require('../../models/fuelCompany');
+const Site = require('../../models/siteModel');
 
 exports.createOne = (Model , docValidation = null , logger , options = {} ) => catchAsync(async(req , res , next) => {
     const { imageField = 'image', isSingleImage = true , imgDir } = options;
@@ -57,9 +60,31 @@ exports.getMy = (Model, populateItems = {}, logger, query = {}) => {
     });
 };
 
-exports.getAll = (Model, populateItems = {}, logger, query = {}) => {
+exports.getAll = (Model, populateItems = {}, logger, query = {},  dateField = "createdAt") => {
     return catchAsync(async (req, res, next) => {;
-        const features = new APIFeatures(Model.find(query), req.query)
+
+        if (req.query.client) {
+  const clients = await Client.find({
+    name: {
+      $regex: req.query.client,
+      $options: "i",
+    },
+  }).select("_id");
+
+  req.query.client = clients.map((c) => c._id);
+}
+  if (req.query.fuelCompany) {
+  const fuelCompanies = await FuelCompany.find({
+    fuelCompany: {
+      $regex: req.query.fuelCompany,
+      $options: "i",
+    },
+  }).select("_id");
+
+  req.query.fuelCompany = fuelCompanies.map((c) => c._id);
+}
+
+        const features = await new APIFeatures(Model.find(query), req.query,dateField)
             .filter()
             .limitFields()
             .sort()
@@ -192,14 +217,28 @@ exports.getAllByField = (
   Model,
   field,
   populateItems = [],
-  logger
+  logger,
+  dateField = "createdAt"
 ) =>
   catchAsync(async (req, res, next) => {
     const value = req.params.id;
 
+if (req.query.site) {
+  const sites = await Site.find({
+    siteName: {
+      $regex: req.query.site,
+      $options: "i",
+    },
+  }).select("_id");
+
+  req.query.site = sites.map((c) => c._id);
+
+}
+
     const features = new APIFeatures(
       Model.find({ [field]: value }),
-      req.query
+      req.query,
+      dateField
     )
       .filter()
       .limitFields()

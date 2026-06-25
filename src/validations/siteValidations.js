@@ -66,6 +66,7 @@ const GETJoiSiteSchema = Joi.object({
     name:Joi.string().optional().allow(''),
         date:Joi.string().optional().allow(""),
   client: Joi.string().optional().allow(''),
+  site:Joi.string().optional().allow(''),
   siteName: Joi.string().optional().allow(""),
   address: address.optional(),
   image: image,

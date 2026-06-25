@@ -104,3 +104,21 @@ exports.getSitesByClient = catchAsync(async (req, res, next) => {
 
   handlerFactory.getAllByField(Site,"client",populateOptions,logger)(req, res, next)
 });
+
+
+exports.getSitesDropdownList = async (req, res, next) => {
+  try {
+    const sites = await Site.find({ status: "Active" }) 
+      .select("_id siteName")
+      .lean();
+
+  
+     sendSuccessResponse(res,200,logger,{
+      message:"clients dropdown list",
+      docs:sites
+    })
+    
+  } catch (error) {
+        return next(new AppError(error.message, 500));
+  }
+};

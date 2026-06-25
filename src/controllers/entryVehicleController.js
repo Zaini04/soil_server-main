@@ -104,7 +104,7 @@ exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
   ];
 
   // Pass custom parsed target object logic inside factory template
-  handlerFactory.getAll(EntryVehicle, populateOptions, logger, query)(req, res, next);
+  handlerFactory.getAll(EntryVehicle, populateOptions, logger, query,"date")(req, res, next);
 });
 
 // @route    GET /api/entry-vehicles/client/:clientId
@@ -369,16 +369,33 @@ exports.dashboard = catchAsync(async(req,res,nex)=>{
 
   req.query = validQuery;
 
-    const features = new APIFeatures(
-    EntryVehicle.find(),
-    req.query
-  ).filter();
+  //   const features = new APIFeatures(
+  //   EntryVehicle.find(),
+  //   req.query
+  // ).filter();
 
-  const matchStage = features.queryObj || {};
+  const startOfMonth = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth(),
+  1
+);
+
+const startOfNextMonth = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth() + 1,
+  1
+);
+
+  // const matchStage = features.queryObj || {};
 
   const dashboard = await EntryVehicle.aggregate([
     {
-      $match:matchStage
+      $match:{
+        date: {
+        $gte: startOfMonth,
+        $lte: startOfNextMonth,
+      },
+      }
     },
     {
       $group:{

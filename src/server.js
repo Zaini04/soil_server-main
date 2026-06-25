@@ -40,6 +40,7 @@ app.use('/api/user' , require('./routes/userRoutes'));
 app.use('/api/vehicle',require('./routes/vehicleRoutes'))
 app.use('/api/entry-vehicle',require('./routes/entryVehicleRoutes'))
 app.use('/api/client',require('./routes/clientRoutes'))
+app.use('/api/company-records',require('./routes/companyRecordsRoutes'))
 app.use('/api/fuel',require('./routes/fuelRoutes'))
 app.use('/api/site',require('./routes/siteRoutes'))
 app.use('/api/project' , require('./routes/projectRoutes'));

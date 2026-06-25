@@ -137,3 +137,21 @@ exports.getClientSummary = catchAsync(async (req, res, next) => {
     summary,
   });
 });
+
+
+exports.getClient = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const doc =  await Client.findById(id).select('name image status phoneNumber city')
+
+  if(!doc){
+    return next(new AppError("No records found for this client.", 404));
+  }
+
+  sendSuccessResponse(res,200,logger,{
+    message:"Client fetched successfully",
+    doc:doc
+  })
+
+}
+)

@@ -1,8 +1,9 @@
 class APIFeatures {
-    constructor(query , queryStr){
-        this.query = query;
-        this.queryStr = queryStr;
-    }
+  constructor(query, queryStr, dateField = "createdAt") {
+  this.query = query;
+  this.queryStr = queryStr;
+  this.dateField = dateField;
+}
 
     filter() {
         let queryObj = { ...this.queryStr };
@@ -18,14 +19,25 @@ class APIFeatures {
          if (queryObj.vehicle) {
     queryStr.vehicle = queryObj.vehicle;
   }
-         if (queryObj.client) {
-    queryStr.client = queryObj.client;
-  }
+    if (queryObj.client) {
+  queryStr.client = Array.isArray(queryObj.client)
+    ? { $in: queryObj.client }
+    : queryObj.client;
+}
 
  
         if(queryObj.fuelCompany){
-            queryStr.fuelCompany = queryObj.fuelCompany
-        }
+
+ queryStr.fuelCompany = Array.isArray(queryObj.fuelCompany)
+    ? { $in: queryObj.fuelCompany }
+    : queryObj.fuelCompany;        }
+
+ if(queryObj.site){
+
+ queryStr.site = Array.isArray(queryObj.site)
+    ? { $in: queryObj.site }
+    : queryObj.site;        }
+
         if (queryObj.status) {
             queryStr.status = queryObj.status;
         }
@@ -39,27 +51,28 @@ class APIFeatures {
         if(queryObj.name){
             queryStr.name = queryObj.name
         }
+
         if(queryObj.siteName){
             queryStr.siteName = queryObj.siteName
         }
+
         if (queryObj.autoIncrementId !== undefined) {
             queryStr.autoIncrementId = queryObj.autoIncrementId;
         }
 
  // --- HANDLE DATE RANGE ---
 if (queryObj.from || queryObj.to) {
-    queryStr.createdAt = {};
-    
+queryStr[this.dateField] = {};    
     if (queryObj.from) {
         const startDate = new Date(queryObj.from);
         startDate.setUTCHours(0, 0, 0, 0);
-        queryStr.createdAt.$gte = startDate;
+        queryStr[this.dateField].$gte = startDate;
     }
     
     if (queryObj.to) {
         const endDate = new Date(queryObj.to);
         endDate.setUTCHours(23, 59, 59, 999);
-        queryStr.createdAt.$lte = endDate;
+        queryStr[this.dateField].$lte = endDate;
     }
 }else if (queryObj.date) {
     // Agar koi single date bheje (Puranay flow k liye fallback)

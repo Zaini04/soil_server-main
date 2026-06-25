@@ -1,4 +1,4 @@
-const { addClient, getAllClients, updateClient, deleteClient, getClientDropdownList, getClientSummary } = require("../controllers/clientController");
+const { addClient, getAllClients, updateClient, deleteClient, getClientDropdownList, getClientSummary, getClient } = require("../controllers/clientController");
 const { getEntriesByClient } = require("../controllers/entryVehicleController");
 const { protect, checkActionAccess } = require("../middlewares/protect");
 const { printRequest } = require("../logger")("Client_CONTROLLER");
@@ -11,6 +11,7 @@ router.get('/clients_list' ,protect, printRequest  , checkActionAccess("clients"
 router.get('/ledger/:id' ,protect, printRequest  , checkActionAccess("clients","view") , getEntriesByClient);
 router.get("/client_summary/:id",protect, printRequest  , checkActionAccess("clients","view"), getClientSummary);
 router.route('/:id')
+    .get(printRequest , protect , checkActionAccess("clients","view"),getClient )
     .put(printRequest , protect , checkActionAccess("clients","update"),updateClient )
     .delete(printRequest , protect , checkActionAccess("clients","delete"), deleteClient )
 
