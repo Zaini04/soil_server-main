@@ -164,22 +164,13 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
   const { ids = [] } = req.body;
 
   let query = { client: clientId };
-
-  if (ids.length > 0) {
-    query._id = { $in: ids };
-  }
+  if (ids.length > 0) query._id = { $in: ids };
 
   if (req.query.site) {
     const sites = await Site.find({
-      siteName: {
-        $regex: req.query.site,
-        $options: "i",
-      },
+      siteName: { $regex: req.query.site, $options: "i" },
     }).select("_id");
-
-    query.site = {
-      $in: sites.map((s) => s._id),
-    };
+    query.site = { $in: sites.map((s) => s._id) };
   }
 
   const features = new APIFeatures(
@@ -195,10 +186,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     .sort({ date: -1 });
 
   if (!records.length) {
-    return res.status(404).json({
-      success: false,
-      message: "No records found",
-    });
+    return res.status(404).json({ success: false, message: "No records found" });
   }
 
   const totals = records.reduce(
@@ -207,213 +195,252 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       acc.totalRate += item.totalRate || 0;
       return acc;
     },
-    {
-      totalSft: 0,
-      totalRate: 0,
-    }
+    { totalSft: 0, totalRate: 0 }
   );
 
   const clientName = records[0]?.client?.name || "N/A";
 
-  const doc = new PDFDocument({
-    margin: 30,
-    size: "A4",
-  });
+  const doc = new PDFDocument({ margin: 30, size: "A4" });
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
     "Content-Disposition",
     `attachment; filename=company-records-${Date.now()}.pdf`
   );
-
   doc.pipe(res);
 
-  // ==================================================
-  // HEADER
-  // ============================================
-  // ======
+  // ─── PAGE CONSTANTS ───────────────────────────────────────────
+  const pageLeft = 30;
+  const pageRight = doc.page.width - 30;
+  const tableWidth = pageRight - pageLeft; // 555
 
-  doc.moveDown(2)
-const headerY = 20;
-const headerWidth = doc.page.width - 60; // 30 left + 30 right margin
-
-doc
-  .rect(30, headerY, headerWidth, 70)
-  .fill("#000");
-  doc
-    .fillColor("#fff")
-    .fontSize(22)
-    .font("Helvetica-Bold")
-    .text(`${clientName}`, 0, 20, {
-      align: "center",
-    });
-
-  // doc
-  //   .fontSize(14)
-  //   .text(`Client: ${clientName}`, {
-  //     align: "center",
-  //   });
-
-  doc.moveDown(2);
-
-  doc.fillColor("#000");
-
-  doc
-    .fontSize(10)
-    .font("Helvetica")
-    .text(
-      ` Date: ${new Date().toLocaleDateString("en-GB")}`,
-      {
-        align: "right",
-      }
-    );
-
-  doc.moveDown();
-
-  // ==================================================
-  // TABLE HEADER
-  // ==================================================
-
-  let y = doc.y + 10;
-
-  const columns = {
-    sr: 30,
-    date: 60,
-    bilty: 105,
-    site: 170,
-    vehicle: 255,
-    material: 325,
-    rate: 405,
-    sft: 455,
-    total: 510,
+  // ─── COLUMN DEFINITIONS ───────────────────────────────────────
+  // Sr(20) | Date(65) | Bilty(50) | Site(80) | Vehicle(60) | Material(70) | Rate(50) | SFT(50) | Amount(110)
+  // Total = 20+65+50+80+60+70+50+50+110 = 555
+  const cols = {
+    sr:       { x: pageLeft,       w: 30  },
+    date:     { x: pageLeft + 20,  w: 65  },
+    bilty:    { x: pageLeft + 85,  w: 50  },
+    site:     { x: pageLeft + 135, w: 80  },
+    vehicle:  { x: pageLeft + 215, w: 60  },
+    material: { x: pageLeft + 275, w: 70  },
+    rate:     { x: pageLeft + 345, w: 50  },
+    sft:      { x: pageLeft + 395, w: 50  },
+    total:    { x: pageLeft + 445, w: 110 },
   };
 
-  doc.rect(20, y, 560, 25);
+  const PADDING = { top: 5, bottom: 5, left: 4 };
+  const HEADER_HEIGHT = 28;
+  const MIN_ROW_HEIGHT = 22;
+  const FONT_SIZE = 8;
 
-  doc.font("Helvetica-Bold").fontSize(8);
+  // ─── HELPER: draw table header ────────────────────────────────
+  const drawTableHeader = (y) => {
+    // Light gray header background
+    doc.rect(pageLeft, y, tableWidth, HEADER_HEIGHT).fill("#e8e8e8");
 
-  doc.text("Sr#", columns.sr, y + 8);
-  doc.text("Date", columns.date, y + 8);
-  doc.text("Bilty", columns.bilty, y + 8);
-  doc.text("Site", columns.site, y + 8);
-  doc.text("Vehicle", columns.vehicle, y + 8);
-  doc.text("Material", columns.material, y + 8);
-  doc.text("Rate", columns.rate, y + 8);
-  doc.text("SFT", columns.sft, y + 8);
-  doc.text("Amount", columns.total, y + 8);
+    doc.font("Helvetica-Bold").fontSize(FONT_SIZE).fillColor("#000000");
 
-  y += 25;
+    const headers = [
+      { key: "sr",       label: "Sr#"      },
+      { key: "date",     label: "Date"     },
+      { key: "bilty",    label: "Bilty"    },
+      { key: "site",     label: "Site"     },
+      { key: "vehicle",  label: "Vehicle"  },
+      { key: "material", label: "Material" },
+      { key: "rate",     label: "Rate"     },
+      { key: "sft",      label: "SFT"      },
+      { key: "total",    label: "Amount"   },
+    ];
 
-  // ==================================================
-  // TABLE DATA
-  // ==================================================
+    headers.forEach(({ key, label }) => {
+      const col = cols[key];
+      doc.text(label, col.x + PADDING.left, y + PADDING.top + 4, {
+        width: col.w - PADDING.left * 2,
+        lineBreak: false,
+      });
+    });
 
-  doc.font("Helvetica").fontSize(8);
+    // Column dividers
+    doc.strokeColor("#999999").lineWidth(0.5);
+    Object.values(cols).slice(1).forEach(({ x }) => {
+      doc.moveTo(x, y).lineTo(x, y + HEADER_HEIGHT).stroke();
+    });
 
-  records.forEach((record, index) => {
-    if (y > 730) {
-      doc.addPage();
+    // Outer border
+    doc.rect(pageLeft, y, tableWidth, HEADER_HEIGHT).stroke();
 
-      y = 40;
+    return y + HEADER_HEIGHT;
+  };
 
-      doc.rect(20, y, 560, 25);
+  // ─── HELPER: calculate row height ─────────────────────────────
+  const getRowHeight = (record) => {
+    doc.font("Helvetica").fontSize(FONT_SIZE);
 
-      doc.font("Helvetica-Bold");
+    const wrappingCols = [
+      { text: record.site?.siteName || "",     width: cols.site.w     - PADDING.left * 2 },
+      { text: record.vehicle?.vehicleNo || "", width: cols.vehicle.w  - PADDING.left * 2 },
+      { text: record.materialType || "",       width: cols.material.w - PADDING.left * 2 },
+    ];
 
-      doc.text("Sr#", columns.sr, y + 8);
-      doc.text("Date", columns.date, y + 8);
-      doc.text("Bilty", columns.bilty, y + 8);
-      doc.text("Site", columns.site, y + 8);
-      doc.text("Vehicle", columns.vehicle, y + 8);
-      doc.text("Material", columns.material, y + 8);
-      doc.text("Rate", columns.rate, y + 8);
-      doc.text("SFT", columns.sft, y + 8);
-      doc.text("Amount", columns.total, y + 8);
+    let maxHeight = MIN_ROW_HEIGHT;
+    wrappingCols.forEach(({ text, width }) => {
+      const h = doc.heightOfString(text, { width }) + PADDING.top + PADDING.bottom;
+      if (h > maxHeight) maxHeight = h;
+    });
 
-      y += 25;
+    return Math.max(maxHeight, MIN_ROW_HEIGHT);
+  };
 
-      doc.font("Helvetica");
-    }
+  // ─── HELPER: draw one data row ─────────────────────────────────
+  const drawRow = (record, index, y, rowHeight) => {
+    const bg = index % 2 === 0 ? "#f9f9f9" : "#ffffff";
+    doc.rect(pageLeft, y, tableWidth, rowHeight).fill(bg);
 
-    doc.rect(20, y - 3, 560, 22).stroke();
+    doc.font("Helvetica").fontSize(FONT_SIZE).fillColor("#000000");
 
-    doc.text(index + 1, columns.sr, y);
+    const textY = y + PADDING.top;
+
+    doc.text(String(index + 1), cols.sr.x + PADDING.left, textY, {
+      width: cols.sr.w - PADDING.left * 2,
+      lineBreak: false,
+    });
+
     doc.text(
       new Date(record.date).toLocaleDateString("en-GB"),
-      columns.date,
-      y
-    );
-    doc.text(record.biltyNo || "", columns.bilty, y);
-
-    doc.text(
-      record.site?.siteName || "",
-      columns.site,
-      y,
-      {
-        width: 75,
-      }
+      cols.date.x + PADDING.left,
+      textY,
+      { width: cols.date.w - PADDING.left * 2, lineBreak: false }
     );
 
-    doc.text(
-      record.vehicle?.vehicleNo || "",
-      columns.vehicle,
-      y,
-      {
-        width: 60,
-      }
-    );
+    doc.text(record.biltyNo || "", cols.bilty.x + PADDING.left, textY, {
+      width: cols.bilty.w - PADDING.left * 2,
+      lineBreak: false,
+    });
 
-    doc.text(
-      record.materialType || "",
-      columns.material,
-      y,
-      {
-        width: 70,
-      }
-    );
+    doc.text(record.site?.siteName || "", cols.site.x + PADDING.left, textY, {
+      width: cols.site.w - PADDING.left * 2,
+    });
+
+    doc.text(record.vehicle?.vehicleNo || "", cols.vehicle.x + PADDING.left, textY, {
+      width: cols.vehicle.w - PADDING.left * 2,
+    });
+
+    doc.text(record.materialType || "", cols.material.x + PADDING.left, textY, {
+      width: cols.material.w - PADDING.left * 2,
+    });
 
     doc.text(
       record.rate?.toLocaleString() || "0",
-      columns.rate,
-      y
+      cols.rate.x + PADDING.left,
+      textY,
+      { width: cols.rate.w - PADDING.left * 2, lineBreak: false }
     );
 
     doc.text(
       record.totalSft?.toLocaleString() || "0",
-      columns.sft,
-      y
+      cols.sft.x + PADDING.left,
+      textY,
+      { width: cols.sft.w - PADDING.left * 2, lineBreak: false }
     );
 
     doc.text(
       record.totalRate?.toLocaleString() || "0",
-      columns.total,
-      y
+      cols.total.x + PADDING.left,
+      textY,
+      { width: cols.total.w - PADDING.left * 2, lineBreak: false }
     );
 
-    y += 22;
-  });
+    // Column dividers
+    doc.strokeColor("#cccccc").lineWidth(0.5);
+    Object.values(cols).slice(1).forEach(({ x }) => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+    });
 
-  // ==================================================
-  // TOTAL SECTION
-  // ==================================================
+    // Row border
+    doc.rect(pageLeft, y, tableWidth, rowHeight).stroke();
+  };
 
-  y += 15;
+  // ══════════════════════════════════════════════════════════════
+  // DOCUMENT HEADER
+  // ══════════════════════════════════════════════════════════════
+  const headerY = 30;
+  const headerHeight = 60;
 
-  doc.rect(20, y, 560, 35);
+  doc.rect(pageLeft, headerY, tableWidth, headerHeight).fill("#000000");
+
+  const titleTextHeight = doc.heightOfString(clientName, { width: tableWidth });
+  doc
+    .fillColor("#ffffff")
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .text(clientName, pageLeft, headerY + (headerHeight - titleTextHeight) / 2, {
+      width: tableWidth,
+      align: "center",
+    });
 
   doc
+    .fillColor("#000000")
+    .font("Helvetica")
+    .fontSize(9)
+    .text(
+      `Date: ${new Date().toLocaleDateString("en-GB")}`,
+      pageLeft,
+      headerY + headerHeight + 8,
+      { width: tableWidth, align: "right" }
+    );
+
+  // ══════════════════════════════════════════════════════════════
+  // TABLE
+  // ══════════════════════════════════════════════════════════════
+  let y = headerY + headerHeight + 28;
+  y = drawTableHeader(y);
+
+  doc.font("Helvetica").fontSize(FONT_SIZE);
+
+  records.forEach((record, index) => {
+    const rowHeight = getRowHeight(record);
+
+    if (y + rowHeight > doc.page.height - 60) {
+      doc.addPage();
+      y = 30;
+      y = drawTableHeader(y);
+    }
+
+    drawRow(record, index, y, rowHeight);
+    y += rowHeight;
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // TOTALS SECTION
+  // ══════════════════════════════════════════════════════════════
+  y += 10;
+  const totalHeight = 38;
+
+  if (y + totalHeight > doc.page.height - 30) {
+    doc.addPage();
+    y = 30;
+  }
+
+  // Light gray background for totals
+  doc.rect(pageLeft, y, tableWidth, totalHeight).fill("#e8e8e8");
+  doc.rect(pageLeft, y, tableWidth, totalHeight).stroke();
+
+  doc
+    .fillColor("#000000")
     .font("Helvetica-Bold")
-    .fontSize(11)
+    .fontSize(10)
     .text(
       `TOTAL SFT: ${totals.totalSft.toLocaleString()}`,
-      40,
-      y + 10
+      pageLeft + 15,
+      y + 13
     );
 
   doc.text(
     `TOTAL AMOUNT: Rs. ${totals.totalRate.toLocaleString()}`,
-    320,
-    y + 10
+    pageLeft + tableWidth / 2,
+    y + 13,
+    { width: tableWidth / 2 - 15, align: "right" }
   );
 
   doc.end();
