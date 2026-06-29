@@ -7,6 +7,39 @@ const logger = require("../logger")("Vehicle_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
 
 
+
+const vehiclesRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.createdAt).toLocaleDateString("en-GB") },
+  { header: "Vehicle No",    key: "vheicleNo",      width: 50,  getValue: (r) => r.vehicleNo || "" },
+  { header: "Vehicle Name",  key: "typeVehicle",      width: 60,  getValue: (r) => r.typeVehicle || "", wrap: true },
+  { header: "Owner Name",  key: "ownerName",      width: 60,  getValue: (r) => r.ownerName || "", wrap: true },
+  { header: "Status",  key: "status",      width: 60,  getValue: (r) => r.status || "", wrap: true },
+
+];
+ 
+const vehiclesTotals = [];
+ 
+const vehiclesRecordPopulate = [];
+
+
+exports.exportVehiclesRecordsExcel = handlerFactory.exportExcel(Vehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+  populate: vehiclesRecordPopulate,
+  columns: vehiclesRecordColumns,
+  totalsConfig: vehiclesTotals,
+  sheetName: "Vehicles Records",
+});
+ 
+exports.exportVehiclesRecordsPdf = handlerFactory.exportPdf(Vehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+   populate: vehiclesRecordPopulate,
+  columns: vehiclesRecordColumns,
+  totalsConfig: vehiclesTotals,
+  title:  "Vehicles Records",
+});
+
 exports.addVehicle =  catchAsync( async (req, res, next) => {
 
     try {

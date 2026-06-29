@@ -7,6 +7,39 @@ const logger = require("../logger")("Client_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
 const EntryVehicle = require("../models/entryVehicleModal");
 
+
+const clientRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.createdAt).toLocaleDateString("en-GB") },
+  { header: "Client Name",    key: "name",      width: 50,  getValue: (r) => r.name || "" },
+  { header: "Phone No",  key: "phoneNumber",      width: 60,  getValue: (r) => r.phoneNumber || "", wrap: true },
+  { header: "Location",  key: "city",      width: 60,  getValue: (r) => r.city || "", wrap: true },
+  { header: "Status",  key: "status",      width: 60,  getValue: (r) => r.status || "", wrap: true },
+
+];
+ 
+const clientTotals = [];
+ 
+const clientRecordPopulate = [];
+
+
+exports.exportClientsRecordsExcel = handlerFactory.exportExcel(Client, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+  populate: clientRecordPopulate,
+  columns: clientRecordColumns,
+  totalsConfig: clientTotals,
+  sheetName: "Clients Records",
+});
+ 
+exports.exportClientsRecordsPdf = handlerFactory.exportPdf(Client, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+   populate: clientRecordPopulate,
+  columns: clientRecordColumns,
+  totalsConfig: clientTotals,
+  title:  "Clients Records",
+});
+
 exports.addClient = catchAsync(async (req, res, next) => {
     try {
         const { 

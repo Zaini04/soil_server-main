@@ -16,9 +16,110 @@ const APIFeatures = require("../utils/APIFeatures");
 
 const logger = require("../logger")("EntryVehicle_CONTROLLER");
 
-// --- UTILITY RESPONSE HELPER (Agar aapke pas global nahi hai to safe rehne k liye) ---
 
-// @route    POST /api/entry-vehicles
+
+const incomeExpenseRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Vehicle",    key: "vehicleNo",      width: 50,  getValue: (r) => r.vehicle?.vehicleNo || "" },
+  { header: "Vehicle",  key: "typeVehicle",      width: 60,  getValue: (r) => r.vehicle?.typeVehicle || "", wrap: true },
+  { header: "Total Rate",  key: "totalRate",      width: 60,  getValue: (r) => r.totalRate ?? 0, wrap: true },
+  { header: "TotalExpense",  key: "totalExpense",      width: 60,  getValue: (r) => (r.totalRate - r.remainingAmount) ?? 0, wrap: true },
+  { header: "Remaining Amount",  key: "remainingAmount",      width: 60,  getValue: (r) => r.remainingAmount ?? 0, wrap: true },
+
+];
+ 
+const incomeExpenseTotals = [
+  { label: "TOTAL Rate",    field: "totalRate" , prefix: "Rs. "},
+  { 
+    label: "TOTAL Expense",     
+    field: "totalExpense",      
+    prefix: "Rs. ",
+    compute: (r) => (r.totalRate - r.remainingAmount) 
+  },
+  { label: "TOTAL  Remaining", field: "remainingAmount", prefix: "Rs. " },
+];
+ 
+const incomeExpenseRecordPopulate = [
+  { path: "vehicle", select: "vehicleNo typeVehicle" },
+];
+
+const entryVehiclesRecordColumns = [
+  { header: "Date",     key: "date",         width: 70,  getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Vehicle",    key: "vehicleNo",      width: 50,  getValue: (r) => r.vehicle?.vehicleNo || "" },
+  { header: "Client",  key: "client",      width: 60,  getValue: (r) => r.client?.name || "", wrap: true },
+  { header: "Site",  key: "site",      width: 55,  getValue: (r) => r.site?.siteName || "", wrap: true },
+  { header: "Material",  key: "material",      width: 60,  getValue: (r) => r.materialType || "", wrap: true },
+  { header: "Fuel ",  key: "fuelCompany",      width: 50,  getValue: (r) => r.fuelCompany?.fuelCompany || "", wrap: true },
+  { header: "Litters",  key: "dieselInLitters",      width: 50,  getValue: (r) => r.dieselInLitters || "", wrap: true },
+  { header: "Rate",  key: "totalRate",      width: 60,  getValue: (r) => r.totalRate ?? 0, wrap: true },
+  { header: "Expense",  key: "totalExpense",      width: 60,  getValue: (r) => (r.totalRate - r.remainingAmount) ?? 0, wrap: true },
+  { header: "Rem Amount",  key: "remainingAmount",      width: 60,  getValue: (r) => r.remainingAmount ?? 0, wrap: true },
+  { header: "Rec Amount",  key: "receivedAmount",      width: 60,  getValue: (r) => r.payment?.amountReceived ?? 0, wrap: true },
+  { header: "Due Amount",  key: "DueAmount",      width: 60,  getValue: (r) => r.clientDue ?? 0, wrap: true },
+
+];
+ 
+const entryVehiclesTotals = [
+  { label: "TOTAL Rate",    field: "totalRate" , prefix: "Rs. "},
+  { 
+    label: "TOTAL Expense",     
+    field: "totalExpense",      
+    prefix: "Rs. ",
+    compute: (r) => (r.totalRate - r.remainingAmount) 
+  },
+  { label: "TOTAL  Remaining", field: "remainingAmount", prefix: "Rs. " },
+  { label: "TOTAL  Received", field: "amountReceived", prefix: "Rs. " },
+  { label: "TOTAL  Remaining", field: "clientDue", prefix: "Rs. " },
+];
+ 
+const entryVehiclesRecordPopulate = [
+  { path: "vehicle", select: "vehicleNo " },
+  { path: "client", select: "name " },
+  { path: "site", select: "siteName " },
+  { path: "fuelCompany", select: "fuelCompany" },
+
+];
+
+exports.exportIncomeExpenseRecordsExcel = handlerFactory.exportExcel(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: incomeExpenseRecordPopulate,
+  columns: incomeExpenseRecordColumns,
+  totalsConfig: incomeExpenseTotals,
+  sheetName: "Income Expense Records",
+});
+ 
+exports.exportIncomeExpenseRecordsPdf = handlerFactory.exportPdf(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: incomeExpenseRecordPopulate,
+  columns: incomeExpenseRecordColumns,
+  totalsConfig: incomeExpenseTotals,
+  title:  "Income Expense Records",
+});
+
+exports.exportEntryVehicleRecordsExcel = handlerFactory.exportExcel(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: entryVehiclesRecordPopulate,
+  columns: entryVehiclesRecordColumns,
+  totalsConfig: entryVehiclesTotals,
+  sheetName: "Entry Vehicle Records",
+});
+ 
+exports.exportEntryVehicleRecordsPdf = handlerFactory.exportPdf(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  dateField: "date",
+  populate: entryVehiclesRecordPopulate,
+  columns: entryVehiclesRecordColumns,
+  totalsConfig: entryVehiclesTotals,
+  title:  "Entry Vehicle Records",
+});
+
+
+
+
 exports.entryVehicle = catchAsync(async (req, res, next) => {
   console.log(req.body)
 
@@ -283,7 +384,7 @@ exports.getIncomeExpense = catchAsync(async (req, res, next) => {
 
   // Default specific fields — frontend override kar sakta hai
   if (!req.query.fields) {
-    req.query.fields = "_id,createdAt,vehicle, totalRate,remainingAmount";
+    req.query.fields = "_id,date,vehicle, totalRate,remainingAmount";
   }
 
   handlerFactory.getAll(

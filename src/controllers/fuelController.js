@@ -1,4 +1,4 @@
-const Fuel = require("../models/fuelCompany"); // Adjust matching folder path
+const Fuel = require("../models/entryFuelModel"); // Adjust matching folder path
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const handlerFactory = require('./factories/handlerFactory');
@@ -9,6 +9,85 @@ const { sendSuccessResponse } = require("../utils/helpers");
 const EntryVehicle = require("../models/entryVehicleModal");
 
 const logger = require("../logger")("FuelStock_CONTROLLER");
+
+
+const entryFuelRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Vehicle",    key: "vehicleNo",      width: 50,  getValue: (r) => r.vehicle?.vehicleNo || "" },
+  { header: "Vehicle",  key: "typeVehicle",      width: 60,  getValue: (r) => r.vehicle?.typeVehicle || "", wrap: true },
+  { header: "FuelCompany",  key: "fuelCompany",      width: 60,  getValue: (r) => r.fuelCompany?.fuelCompany || "", wrap: true },
+  { header: "DiesalLiters",  key: "dieselInLitters",      width: 60,  getValue: (r) => r.dieselInLitters ?? 0, wrap: true },
+  { header: "TotalPrice",  key: "dieselCost",      width: 60,  getValue: (r) => r.dieselCost ?? 0, wrap: true },
+
+];
+ 
+const entryFuelTotals = [
+  { label: "TOTAL Diesel Litters",    field: "dieselInLitters" },
+  { label: "TOTAL Diesel Price", field: "dieselCost", prefix: "Rs. " },
+];
+ 
+const entryFuelRecordPopulate = [
+  { path: "fuelCompany",  select: "fuelCompany" },
+  { path: "vehicle", select: "vehicleNo typeVehicle" },
+];
+
+const FuelStockRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.createdAt).toLocaleDateString("en-GB") },
+  { header: "FuelCompany",  key: "fuelCompany",      width: 60,  getValue: (r) => r.fuelCompany?.fuelCompany || "", wrap: true },
+  { header: "FuelLiters",  key: "fuelLiters",      width: 60,  getValue: (r) => r.fuelLiters ?? 0, wrap: true },
+
+];
+ 
+const FuelStockTotals = [
+  { label: "TOTAL Fuel Litters",    field: "fuelLiters" },
+];
+ 
+const FuelStockRecordPopulate = [
+  { path: "fuelCompany",  select: "fuelCompany" },
+];
+
+
+
+exports.exportEntryFuelRecordsExcel = handlerFactory.exportExcel(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: entryFuelRecordPopulate,
+  columns: entryFuelRecordColumns,
+  totalsConfig: entryFuelTotals,
+  sheetName: "Entry Fuel Records",
+});
+ 
+exports.exportEntryFuelRecordsPdf = handlerFactory.exportPdf(EntryVehicle, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: entryFuelRecordPopulate,
+  columns: entryFuelRecordColumns,
+  totalsConfig: entryFuelTotals,
+  title: (records) => records[0]?.client?.name || "Entry Fuel Records",
+});
+
+ 
+
+exports.exportFuelStockRecordsExcel = handlerFactory.exportExcel(FuelStock, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+  populate:FuelStockRecordPopulate ,
+  columns: FuelStockRecordColumns,
+  totalsConfig: FuelStockTotals,
+  sheetName: "Fuel Records",
+});
+ 
+exports.exportFuelStockRecordsPdf = handlerFactory.exportPdf(FuelStock, {
+  buildQuery: (req) => ({}),
+  dateField: "createdAt",
+  populate: FuelStockRecordPopulate,
+  columns: FuelStockRecordColumns,
+  totalsConfig: FuelStockTotals,
+  title: (records) => records[0]?.client?.name || "Fuel Stock Records",
+});
+
+ 
+
 
 exports.addFuelStock = catchAsync(async (req, res, next) => {
   // 1. Validate incoming data
@@ -128,7 +207,7 @@ exports.getEntryFuels = catchAsync(async (req, res, next) => {
 
   // Default specific fields — frontend override kar sakta hai
   if (!req.query.fields) {
-    req.query.fields = "_id,createdAt,vehicle,fuelCompany,dieselInLitters,dieselCost";
+    req.query.fields = "_id,date,vehicle,fuelCompany,dieselInLitters,dieselCost";
   }
 
   handlerFactory.getAll(

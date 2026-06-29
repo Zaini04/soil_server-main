@@ -1,4 +1,4 @@
-const { addSite, getAllSites, updateSite, deleteSite, getSitesByClient, getSitesWithMaterialByClient, getSitesDropdownList } = require("../controllers/siteController");
+const { addSite, getAllSites, updateSite, deleteSite, getSitesByClient, getSitesWithMaterialByClient, getSitesDropdownList, exportSitesRecordsPdf, exportSitesRecordsExcel } = require("../controllers/siteController");
 const { protect, checkActionAccess } = require("../middlewares/protect");
 const { printRequest } = require("../logger")("Vehicle_CONTROLLER");
 
@@ -9,6 +9,8 @@ router.get('/all_sites' ,protect, printRequest  , checkActionAccess("sites","vie
 router.get('/clients_sites_materials/:id' ,protect, printRequest  , checkActionAccess("sites","view") , getSitesWithMaterialByClient);
 router.get('/clients_sites/:id' ,protect, printRequest  , checkActionAccess("sites","view") , getSitesByClient);
 router.get('/sites_list' ,protect, printRequest  , checkActionAccess("clients","view") , getSitesDropdownList);
+router.post("/site_records/export-excel",protect, printRequest  , checkActionAccess("sites","view"),exportSitesRecordsExcel);
+router.post("/site_records/export-pdf",protect, printRequest  , checkActionAccess("sites","view"),exportSitesRecordsPdf);
 
 router.route('/:id')
     .put(printRequest , protect , checkActionAccess("sites","update"),updateSite )

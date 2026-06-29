@@ -1,5 +1,5 @@
 const { addFuelCompany, getAllFuelCompanies, updateFuelCompany, deleteFuelCompany } = require("../controllers/fuelCompanyController");
-const { addFuelRecord, getAllFuelRecords, updateFuelRecord, deleteFuelRecord, addFuelStock, getAllFuelStock, updateFuelStock, deleteFuelStock, getAllFuelStockCompanies, getAllFuelCompaniesWithStock, getEntryFuels } = require("../controllers/fuelController");
+const { addFuelRecord, getAllFuelRecords, updateFuelRecord, deleteFuelRecord, addFuelStock, getAllFuelStock, updateFuelStock, deleteFuelStock, getAllFuelStockCompanies, getAllFuelCompaniesWithStock, getEntryFuels, exportEntryFuelRecordsExcel, exportEntryFuelRecordsPdf, exportFuelStockRecordsExcel, exportFuelStockRecordsPdf } = require("../controllers/fuelController");
 const { protect, checkActionAccess } = require("../middlewares/protect");
 const { printRequest } = require("../logger")("Vehicle_CONTROLLER");
 
@@ -18,6 +18,10 @@ router.get('/all_fuel_companies' ,protect, printRequest  , checkActionAccess("fu
 router.get('/all_fuel_companies_list' ,protect, printRequest  , checkActionAccess("fuel-stock","view") , getAllFuelStockCompanies);
 router.get('/all_fuel_stock_companies_list' ,protect, printRequest  , checkActionAccess("fuel-stock","view") , getAllFuelCompaniesWithStock);
 router.get('/entry_fuels' ,protect, printRequest  , checkActionAccess("entry-fuel","view") , getEntryFuels);
+router.post("/entry_records/export-excel",protect, printRequest  , checkActionAccess("entry-fuel","view"),exportEntryFuelRecordsExcel);
+router.post("/entry_records/export-pdf",protect, printRequest  , checkActionAccess("entry-fuel","view"),exportEntryFuelRecordsPdf);
+router.post("/stock_records/export-excel",protect, printRequest  , checkActionAccess("fuel-stock","view"),exportFuelStockRecordsExcel);
+router.post("/stock_records/export-pdf",protect, printRequest  , checkActionAccess("fuel-stock","view"),exportFuelStockRecordsPdf);
 
 router.route('/company/:id')
     .put(printRequest , protect , checkActionAccess("fuel-stock","update"),updateFuelCompany )

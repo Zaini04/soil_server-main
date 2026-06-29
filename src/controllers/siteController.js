@@ -6,15 +6,50 @@ const logger = require("../logger")("Site_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
 const { POSTJoiSiteSchema, PATCHJoiSiteSchema, siteValidation, GETJoiSiteSchema } = require("../validations/siteValidations");
 const Site = require("../models/siteModel");
-// Create a new location site profile
+
+const sitesRecordColumns = [
+  { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.createdAt).toLocaleDateString("en-GB") },
+  { header: "Client",    key: "client",      width: 50,  getValue: (r) => r.client?.name || "" },
+  { header: "Site",  key: "siteName",      width: 60,  getValue: (r) => r.siteName || "", wrap: true },
+  { header: "Address",  key: "address",      width: 60,  getValue: (r) => r.address || "", wrap: true },
+  { header: "Status",  key: "status",      width: 60,  getValue: (r) => r.status || "", wrap: true },
+
+];
+ 
+const sitesTotals = [
+
+];
+ 
+const sitesRecordPopulate = [
+  { path: "client", select: "name" },
+];
+
+
+exports.exportSitesRecordsExcel = handlerFactory.exportExcel(Site, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: sitesRecordPopulate,
+  columns: sitesRecordColumns,
+  totalsConfig: sitesTotals,
+  sheetName: "Sites Records",
+});
+ 
+exports.exportSitesRecordsPdf = handlerFactory.exportPdf(Site, {
+  buildQuery: (req) => ({}),
+  dateField: "date",
+  populate: sitesRecordPopulate,
+  columns: sitesRecordColumns,
+  totalsConfig: sitesTotals,
+  title:  "Sites Records",
+});
+
+
 exports.addSite = catchAsync(async (req, res, next) => {
-  // Validate parent properties and child materials array layout
   const { value: validData, error } = POSTJoiSiteSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
-  // Optional: Prevent duplicate site registration names under the exact same client footprint
   const siteExists = await Site.findOne({ 
     siteName: validData.siteName, 
     client: validData.client 
