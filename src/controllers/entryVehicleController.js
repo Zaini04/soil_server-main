@@ -68,7 +68,7 @@ const entryVehiclesTotals = [
     compute: (r) => (r.totalRate - r.remainingAmount) 
   },
   { label: "TOTAL  Remaining", field: "remainingAmount", prefix: "Rs. " },
-  { label: "TOTAL  Received", field: "amountReceived", prefix: "Rs. " },
+  { label: "TOTAL  Received", field: "payment.amountReceived", prefix: "Rs. " },
   { label: "TOTAL  Remaining", field: "clientDue", prefix: "Rs. " },
 ];
  
