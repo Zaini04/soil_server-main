@@ -11,7 +11,6 @@ const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 
 exports.enterComanyRecords = catchAsync(async (req, res, next) => {
-  console.log(req.body)
 
   const { value: validData, error } = POSTJoiCompanyRecordsSchema.validate(req.body);
   if (error) {
@@ -23,7 +22,7 @@ exports.enterComanyRecords = catchAsync(async (req, res, next) => {
   if(biltyNoExists){
       return next(new AppError("Bilty number already exists.", 404));
   }
-  const entry = await CompanyRecords.create(validData);
+  const entry = await CompanyRecords.create({...validData,createdBy:req.user._id});
 
   sendSuccessResponse(res, 201, logger, {
     message: " Company record created successfully.",
@@ -42,6 +41,7 @@ exports.getCompanyRecordsByClient = catchAsync(async (req, res, next) => {
     { path: "client", select: "name" },
     { path: "site", select: "siteName" },
     { path: "vehicle", select: "vehicleNo  typeVehicle" },
+    { path: "createdBy", select: "username" },
   ];
 
   handlerFactory.getAllByField(CompanyRecords,"client",populateOptions,logger,"date")(req, res, next)

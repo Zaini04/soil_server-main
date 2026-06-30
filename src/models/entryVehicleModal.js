@@ -43,10 +43,9 @@ const vehicleEntrySchema = new mongoose.Schema(
     totalRate: {
       type: Number,
       required: [true, "Total rate calculation is required."],
-      default: 0, // Formula: totalSftVehicles * rate
+      default: 0, 
     },
 
-    // --- INTERNAL EXPENSES (Hmary Apny Kharchy) ---
     materialCost: {
       type: Number,
       required: [true, "Material cost is required."],
@@ -146,6 +145,15 @@ const vehicleEntrySchema = new mongoose.Schema(
       enum: ["generated", "pending"],
       default: "pending",
     },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
   },
   { timestamps: true }
 );

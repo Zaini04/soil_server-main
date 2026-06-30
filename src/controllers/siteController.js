@@ -71,7 +71,13 @@ exports.getAllSites = catchAsync(async (req, res, next) => {
   req.query = validQuery;
 
   const query = {}
-  handlerFactory.getAll(Site,   { path: "client", select: "name" }, logger, query)(req, res, next);
+  const populateOptions = [
+    { path: "client", select: "name" },
+    { path: "createdBy", select: "username" },
+    
+  ];
+
+  handlerFactory.getAll(Site, populateOptions, logger, query)(req, res, next);
 });
 // Get single location site data by database ID
 exports.getSite = handlerFactory.getOne(Site, logger);

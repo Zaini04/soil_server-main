@@ -5,7 +5,7 @@ const objectIdRegEx = /^[0-9a-fA-F]{24}$/;
 
 
 
-const POSTJoiCompanyRecordsSchema = Joi.object({
+const POSTJoiPumpBillsRecordsSchema = Joi.object({
   date: Joi.date().required().messages({
     "date.base": "Please provide a valid date format.",
     "any.required": "Date field is required."
@@ -37,7 +37,7 @@ const POSTJoiCompanyRecordsSchema = Joi.object({
 
 
 
-const GETJoiCompanyRecordsSchema = Joi.object({
+const GETJoiPumpBillsSchema = Joi.object({
   keyword: keyword.optional(),
   from: from.optional().allow(''),
   to: to.optional().allow(''),
@@ -60,10 +60,10 @@ const GETJoiCompanyRecordsSchema = Joi.object({
   limit: Joi.number().integer().min(1).default(10)
 });
 
-const entryCompanyRecordsSchema = POSTJoiCompanyRecordsSchema;
+const entryPumpBillsSchema = POSTJoiPumpBillsSchema;
 
 module.exports = {
-  POSTJoiCompanyRecordsSchema,
-  GETJoiCompanyRecordsSchema,
-  entryCompanyRecordsSchema
+  POSTJoiPumpBillsSchema,
+  GETJoiPumpBillsSchema,
+  entryPumpBillsSchema 
 };

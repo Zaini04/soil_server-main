@@ -90,27 +90,29 @@ exports.exportFuelStockRecordsPdf = handlerFactory.exportPdf(FuelStock, {
 
 
 exports.addFuelStock = catchAsync(async (req, res, next) => {
-  // 1. Validate incoming data
   const { value: validData, error } = POSTJoiFuelSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
-  // Trim aur lowercase karein taake Shell, shell, aur SHELL sab ek hi count hon
   const fuelCompany = validData.fuelCompany.trim().toLowerCase();
   const fuelLiters = validData.fuelLiters;
 
   // 2. Clear & Safe Upsert Query
   const updatedStock = await FuelStock.findOneAndUpdate(
-    { fuelCompany: fuelCompany }, // Simple string match (No Regex confusion)
+    { fuelCompany: fuelCompany }, 
     { 
       $inc: { fuelLiters: fuelLiters },
-      $setOnInsert: { fuelCompany: fuelCompany } // Naye document ke liye lazmi set karega
+      $set:{updatedBy:req.user._id},
+      $setOnInsert: { 
+        fuelCompany: fuelCompany,
+        createdBy:req.user._id
+       } 
     },
     { 
       new: true,          
       upsert: true,       
-      runValidators: true 
+      runValidators: true,
     }
   );
 
@@ -135,6 +137,7 @@ const { value: validQuery, error } = GETJoiFuelSchema.validate(req.query);
 
       const populateOptions = [
     { path: "fuelCompany", select: "fuelCompany" },
+    {path:"createdBy",select:'username'}
   ];
     handlerFactory.getAll(FuelStock, populateOptions, logger, query)(req, res, next);
   })
@@ -156,7 +159,7 @@ exports.deleteFuelStock = handlerFactory.removeFromDb(FuelStock, logger);
 exports.getAllFuelStockCompanies = async (req, res, next) => {
   try {
     const fuelcompanies = await FuelCompany.find() 
-      .select("_id fuelCompany")
+      .select("_id fuelCompany").populate("createdBy","username")
       .lean();
 
   
@@ -186,7 +189,9 @@ exports.getAllFuelCompaniesWithStock = catchAsync(async (req, res, next) => {
         _id: 1,
         fuelCompany: 1,
         availableStock: { $ifNull: [{ $sum: "$stockInfo.fuelLiters" }, 0] },
-        hasStock: { $gt: [{ $size: "$stockInfo" }, 0] }
+        hasStock: { $gt: [{ $size: "$stockInfo" }, 0] },
+        createdBy:req.user._id,
+        updatedBy:req.user._id
       }
     },
     { $sort: { fuelCompany: 1 } }
@@ -215,6 +220,7 @@ exports.getEntryFuels = catchAsync(async (req, res, next) => {
     [
       { path: "vehicle", select: "vehicleNo typeVehicle" },
       { path: "fuelCompany", select: "fuelCompany" },
+      {path:"createdBy",select:"username"}
     ],
     logger,
     {}

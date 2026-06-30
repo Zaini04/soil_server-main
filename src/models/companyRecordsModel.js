@@ -45,6 +45,15 @@ const companyRecordsSchema = new mongoose.Schema(
       required: [true, "Total rate calculation is required."],
       default: 0, 
     },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
 },{
     timestamps: true, 
   })

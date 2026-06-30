@@ -121,7 +121,6 @@ exports.exportEntryVehicleRecordsPdf = handlerFactory.exportPdf(EntryVehicle, {
 
 
 exports.entryVehicle = catchAsync(async (req, res, next) => {
-  console.log(req.body)
 
   const { value: validData, error } = POSTJoiEntryVehicleSchema.validate(req.body);
   if (error) {
@@ -147,7 +146,7 @@ exports.entryVehicle = catchAsync(async (req, res, next) => {
     }
   }
 
-  const entry = await EntryVehicle.create(validData);
+  const entry = await EntryVehicle.create({...validData,createdBy:req.user._id});
 
   // Sirf managed company ka stock minus hoga
   if (fuelCompany && dieselInLitters > 0 && isStockManaged) {
@@ -162,6 +161,18 @@ exports.entryVehicle = catchAsync(async (req, res, next) => {
     doc: entry,
   });
 });
+
+exports.updateEntryVehicle = catchAsync(async (req, res, next) => {
+  const { value: validData, error } = PATCHJoiEntryVehicleSchema.validate(req.body);
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.body = validData;
+  handlerFactory.updateOne(EntryVehicle, logger)(req, res, next);
+});
+
+exports.deleteEntryVehicle = handlerFactory.removeFromDb(EntryVehicle, logger);
 
 // @route    GET /api/entry-vehicles
 // exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
@@ -193,45 +204,30 @@ exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
   req.query = validQuery;
   const query = {};
 
-  
 
-  // Base Populate options setup
   const populateOptions = [
     { path: "client", select: "name" },
     { path: "site", select: "siteName" },
     { path: "vehicle", select: "vehicleNo" },
     {path: 'fuelCompany',select:"fuelCompany"},
-    {path:'payment.fuelCompany',select:"fuelCompany"}
+    {path:'payment.fuelCompany',select:"fuelCompany"},
+    { path: "createdBy", select: "username" },
+
   ];
 
-  // Pass custom parsed target object logic inside factory template
   handlerFactory.getAll(EntryVehicle, populateOptions, logger, query,"date")(req, res, next);
 });
 
 // @route    GET /api/entry-vehicles/client/:clientId
 exports.getEntriesByClient = catchAsync(async (req, res, next) => {
 
-  // const { id } = req.params;
-
-  // const entries = await EntryVehicle.find({ client: id })
-  //   .populate("client","name phoneNumber city status")
-  //   .populate("site", "siteName")
-  //   .populate("vehicle", "vehicleNo typeVehicle")
-  //   .sort({ date: -1 });
-
-  // if (!entries || entries.length === 0) {
-  //   return next(new AppError("No data records found for this designated client.", 404));
-  // }
-
-  // sendSuccessResponse(res, 200, logger, {
-  //   message: "Client vehicle history record logs fetched successfully.",
-  //   docs: entries
-  // });
+ 
 
     const populateOptions = [
     { path: "client", select: "name phoneNumber city status" },
     { path: "site", select: "siteName" },
     { path: "vehicle", select: "vehicleNo  typeVehicle" },
+    { path: "createdBy", select: "username" },
   ];
 
   handlerFactory.getAllByField(EntryVehicle,"client",populateOptions,logger)(req, res, next)
@@ -239,32 +235,17 @@ exports.getEntriesByClient = catchAsync(async (req, res, next) => {
 });
 
 exports.getEntriesByVehicle = catchAsync(async (req, res, next) => {
-  // const { id } = req.params;
-
-  // const entries = await EntryVehicle.find({ vehicle: id })
-  //   .populate("site", "siteName")
-  //   .populate("vehicle","vehicleNo ownerName status typeVehicle")
-  //   .populate("client", "name")
-  //   .sort({ date: -1 });
-
-  // if (!entries || entries.length === 0) {
-  //   return next(new AppError("No data records found for this designated client.", 404));
-  // }
-  
-
-  // sendSuccessResponse(res, 200, logger, {
-  //   message: "Vehicle  history record  fetched successfully.",
-  //   docs: entries
-  // });
-
+ 
   const populateOptions = [
     { path: "client", select: "name" },
     { path: "site", select: "siteName" },
     { path: "vehicle", select: "vehicleNo ownerName status typeVehicle" },
+    { path: "createdBy", select: "username" },
   ];
 
   handlerFactory.getAllByField(EntryVehicle,"vehicle",populateOptions,logger)(req, res, next)
 });
+
 
 
 

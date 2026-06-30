@@ -33,7 +33,7 @@ exports.createOne = (Model , docValidation = null , logger , options = {} ) => c
         }
     }
 
-    const newDoc = await Model.create(req.body);
+    const newDoc = await Model.create({...req.body,createdBy:req.user._id});
     return sendSuccessResponse(res , 201 , logger , {
         message : 'Created successfully.' ,
         doc : newDoc 
@@ -178,9 +178,10 @@ exports.updateOne = (Model, logger, options = {}) => catchAsync(async (req, res,
     }
 
     
-    const updatedDoc = await Model.findByIdAndUpdate(id, req.body, {
+    const updatedDoc = await Model.findByIdAndUpdate(id, {...req.body,updateBy:req.user._id}, {
         new: true,
-        runValidators: true
+        runValidators: true,
+        
     });
 
     return sendSuccessResponse(res, 200, logger, {

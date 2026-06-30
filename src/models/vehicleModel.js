@@ -21,7 +21,16 @@ const VehicleSchema = new mongoose.Schema({
          type:String,
         enum:['Active','Inactive','Blocked',"Deleted"],
         required:[true,"Vehicle status is required "]
-    }
+    },
+    createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', 
+    required: true
+  },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User' 
+  }
 },{timestamps:true})
 
 const Vehicle = mongoose.model('Vehicle' , VehicleSchema);

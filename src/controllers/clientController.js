@@ -77,7 +77,8 @@ exports.addClient = catchAsync(async (req, res, next) => {
             city,
             state,
             status,
-            image
+            image,
+            createdBy:req.user._id
         });
 
         return sendSuccessResponse(res, 201, logger, {
@@ -98,7 +99,10 @@ exports.getAllClients = catchAsync(async (req, res, next) => {
     req.query = validQuery;
 
     const query = {};
-    handlerFactory.getAll(Client, '', logger, query)(req, res, next);
+    const populateOptions = [
+    { path: "createdBy", select: "username" },
+  ];
+    handlerFactory.getAll(Client, populateOptions, logger, query)(req, res, next);
 });
 
 exports.updateClient = catchAsync(async (req, res, next) => {

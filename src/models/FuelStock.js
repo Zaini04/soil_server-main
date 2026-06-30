@@ -13,6 +13,15 @@ const fuelStockSchema = new mongoose.Schema(
       required: [true, "Fuel volume in liters is required."],
       min: [0, "Fuel liters cannot be negative."],
     },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
    
   },
   {

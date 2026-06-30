@@ -61,7 +61,8 @@ exports.addVehicle =  catchAsync( async (req, res, next) => {
         vehicleNo,
         ownerName,
         typeVehicle,
-        status
+        status,
+        createdBy:req.user._id
     })
     return sendSuccessResponse(res, 201, logger, {
             message: "Vehicle Addedd successfully.",
@@ -83,7 +84,11 @@ exports.getAllVehiles = catchAsync(async (req, res, next) => {
   req.query = validQuery;
 
   const query = {}
-  handlerFactory.getAll(Vehicle, '', logger, query)(req, res, next);
+  const populateOptions = [
+    { path: "createdBy", select: "username" },
+  ];
+
+  handlerFactory.getAll(Vehicle, populateOptions, logger, query)(req, res, next);
 });
 
 

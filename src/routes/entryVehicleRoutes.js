@@ -5,6 +5,9 @@ const { printRequest } = require("../logger")("Vehicle_CONTROLLER");
 const router = require("express").Router();
 
 router.post("/entry" ,protect,printRequest,checkActionAccess("entry-vehicle","create"), entryVehicle);
+router.put("/entry/:id" ,protect,printRequest,checkActionAccess("entry-vehicle","create"), updateEntryVehicle);
+router.delete("/:id" ,protect,printRequest,checkActionAccess("entry-vehicle","create"), deleteEntryVehicle);
+
 router.get('/all_entry_vehicles' ,protect, printRequest  , checkActionAccess("entry-vehicle","view") , getAllEntryVehicles);
 router.post('/generate_bill/:id' ,protect, printRequest  , checkActionAccess("entry-vehicle","view") , generateBill);
 router.post('/payment/:id' ,protect, printRequest  , checkActionAccess("entry-vehicle","view") , recordPayment);

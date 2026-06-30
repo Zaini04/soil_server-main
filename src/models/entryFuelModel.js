@@ -21,7 +21,16 @@ const fuelSchema = new mongoose.Schema(
         type: Number,
         required: [true, "Fuel Total price is required."],
       min: [0, "Fuel TotalPrice cannot be negative."],
-    }
+    },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
    
   },
   {

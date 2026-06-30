@@ -36,7 +36,17 @@ const siteSchema = new mongoose.Schema(
     materialsRates: [materialRateSchema], 
     
     status: { type: String, enum: ["Active", "Inactive","Blocked","Deleted"], default: "Active" },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
   },
+  
   { timestamps: true }
 );
 

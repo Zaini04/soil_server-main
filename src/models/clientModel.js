@@ -48,7 +48,16 @@ const ClientSchema = new mongoose.Schema({
         enum: ['Active', 'Inactive','Blocked',"Deleted"],
         default: 'Active',
         required: [true, "Status is required"]
-    }
+    },
+     createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+      }
 }, { timestamps: true });
 
 const Client = mongoose.model('Client', ClientSchema);

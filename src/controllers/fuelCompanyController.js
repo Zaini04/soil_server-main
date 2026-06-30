@@ -36,7 +36,10 @@ const { value: validQuery, error } = GETJoiFuelCompanySchema.validate(req.query)
     req.query = validQuery;
 
     const query = {};
-    handlerFactory.getAll(FuelCompany, '', logger, query)(req, res, next);
+    const populateOptions = [
+    { path: "createdBy", select: "username" },
+  ];
+    handlerFactory.getAll(FuelCompany, populateOptions, logger, query)(req, res, next);
   })
 
 

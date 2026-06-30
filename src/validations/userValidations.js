@@ -62,6 +62,8 @@ const GETJoiSchema = Joi.object({
     role: role.allow(null).optional(),
     email: email.optional(),
     username: username.optional(),
+    status: Joi.string().optional().allow(""),
+
 });
 
 const userValidation = POSTJoiSchema;
