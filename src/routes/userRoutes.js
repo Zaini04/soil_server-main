@@ -57,7 +57,7 @@ router.post("/logout", printRequest, logout);
 router.post('/send-contact-message' , printRequest , sendContactEmail)
 
 router.get('/' , printRequest , protect , checkAccess(menus.user) , getAllUsers);
-router.get('/dashboard-stats' , printRequest , protect  , dashboardStats);
+// router.get('/dashboard-stats' , printRequest , protect  , dashboardStats);
 router.get('/all-admins' , printRequest , protect , isSuperAdmin, getAllAdminUsers);
 router.delete('/delete-my-account' , printRequest , protect , deleteMyAccount)
 router.post('/create-role' , printRequest ,protect,isSuperAdmin, createRole)

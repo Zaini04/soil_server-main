@@ -5,7 +5,6 @@ const userFactory = require('./factories/userFactory');
 const logger = require('../logger')('USER_CONTROLLER');
 const handlerFactory = require('./factories/handlerFactory');
 const User = require('../models/userModel');
-const Inventory = require('../models/inventoryModel');
 const Joi = require('joi');
 const sendContactEmail = require('../utils/mails/sendContactEmail');
 const { country, gender, dateOfBirth } = require('../validations/baseJoiSchemas');
@@ -114,30 +113,30 @@ exports.deleteMyAccount = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.dashboardStats = catchAsync(async (req, res, next) => {
-  const inventoryStats = await Inventory.aggregate([
-    {
-      $facet: {
-        totalActiveInventory: [
-          { $match: { status: { $nin: ['deleted'] } } },
-          { $count: 'count' },
-        ],
-        availableForBooking: [
-          { $match: { status: 'not_assigned' } },
-          { $count: 'count' },
-        ],
-      },
-    },
-  ]);
+// exports.dashboardStats = catchAsync(async (req, res, next) => {
+//   const inventoryStats = await Inventory.aggregate([
+//     {
+//       $facet: {
+//         totalActiveInventory: [
+//           { $match: { status: { $nin: ['deleted'] } } },
+//           { $count: 'count' },
+//         ],
+//         availableForBooking: [
+//           { $match: { status: 'not_assigned' } },
+//           { $count: 'count' },
+//         ],
+//       },
+//     },
+//   ]);
 
-  function getCount(key) {
-    return inventoryStats[0][key]?.[0]?.count || 0;
-  }
+//   function getCount(key) {
+//     return inventoryStats[0][key]?.[0]?.count || 0;
+//   }
 
-  sendSuccessResponse(res, 200, logger, {
-    headline: {
-      totalActiveInventory: getCount('totalActiveInventory'),
-      availableForBooking: getCount('availableForBooking'),
-    },
-  });
-});
+//   sendSuccessResponse(res, 200, logger, {
+//     headline: {
+//       totalActiveInventory: getCount('totalActiveInventory'),
+//       availableForBooking: getCount('availableForBooking'),
+//     },
+//   });
+// });

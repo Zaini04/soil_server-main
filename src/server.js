@@ -45,9 +45,6 @@ app.use('/api/office-expense',require('./routes/officeExpenseRoutes'))
 app.use('/api/pump-bills',require('./routes/pumpBillsRoutes'))
 app.use('/api/fuel',require('./routes/fuelRoutes'))
 app.use('/api/site',require('./routes/siteRoutes'))
-app.use('/api/project' , require('./routes/projectRoutes'));
-app.use('/api/sector' , require('./routes/sectorRoutes'));
-app.use('/api/inventory' , require('./routes/inventoryRoutes'));
 
 app.use("/", loggingMiddlewares.respondNoResourceFound);
 
