@@ -9,7 +9,7 @@ const { POSTJoiFuelCompanySchema, PATCHJoiFuelCompanySchema, GETJoiFuelCompanySc
 const logger = require("../logger")("FuelCompany_CONTROLLER");
 
 exports.addFuelCompany = catchAsync(async (req, res, next) => {
-  // 1. Validate incoming data
+  
   const { value: validData, error } = POSTJoiFuelCompanySchema.validate(req.body);
 
   if (error) {
@@ -27,7 +27,6 @@ exports.addFuelCompany = catchAsync(async (req, res, next) => {
 handlerFactory.createOne(FuelCompany,POSTJoiFuelCompanySchema,logger)(req, res, next)
   
 });
-// exports.getAllFuelRecords = handlerFactory.getAll(Fuel, logger);
 exports.getAllFuelCompanies = catchAsync(async (req, res, next) => {
 const { value: validQuery, error } = GETJoiFuelCompanySchema.validate(req.query);
     if (error) {

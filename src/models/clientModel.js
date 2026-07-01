@@ -30,7 +30,6 @@ const ClientSchema = new mongoose.Schema({
         type: String,
         required: [true, "Email address is required"]
     },
-    // Flattened directly into a single string field
     address: {
         type: String,
         required: [true, "Address is required"]

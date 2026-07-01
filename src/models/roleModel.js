@@ -15,7 +15,6 @@ const RoleSchema = new mongoose.Schema({
           update: { type: Boolean, default: false },
           delete: { type: Boolean, default: false },
         }
-        // features: [String], // in case of complex role based auth , will add in future
     },
   ],
 }, { timestamps: true });

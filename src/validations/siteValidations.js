@@ -1,7 +1,6 @@
 const Joi = require("joi");
 const { keyword, from, to, page, pageSize, sort, sortBy, fields, limit } = require("./baseJoiSchemas");
 
-// Base field definitions
 const client = Joi.string().hex().length(24).messages({
   "string.length": "Invalid Client ID reference format."
 });
@@ -16,7 +15,6 @@ const status = Joi.string().valid("Active", "Inactive").messages({
   "any.only": "Status must be either Active or Inactive."
 });
 
-// Nested Material Row Structure
 const materialRateItemSchema = Joi.object({
   materialType: Joi.string().trim().required().messages({
     "string.empty": "Material type designation is required."
@@ -29,9 +27,7 @@ const materialRateItemSchema = Joi.object({
   })
 });
 
-// --- Schemas exported for the Site Controller ---
 
-// Used for POST /site/add_site
 const POSTJoiSiteSchema = Joi.object({
   client: client.required(),
   siteName: siteName.required(),
@@ -43,7 +39,6 @@ const POSTJoiSiteSchema = Joi.object({
   status: status.optional().default("Active")
 });
 
-// Used for PUT/PATCH /site/update_site/:id
 const PATCHJoiSiteSchema = Joi.object({
   client: client.optional(),
   siteName: siteName.optional(),

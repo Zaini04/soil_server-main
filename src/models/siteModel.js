@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const materialRateSchema = new mongoose.Schema({
   materialType: {
     type: String, 
-    required: [true, "Material type is required."], // This holds "Soil", "Sand", etc.
+    required: [true, "Material type is required."], 
     trim: true,
   },
   rateType: {
@@ -32,7 +32,6 @@ const siteSchema = new mongoose.Schema(
     address: { type: String, required: [true, "Site address is required."], trim: true },
     image: { type: String, default: "" },
     
-    // >>> EVERYTHING IS HERE NOW <<<
     materialsRates: [materialRateSchema], 
     
     status: { type: String, enum: ["Active", "Inactive","Blocked","Deleted"], default: "Active" },

@@ -62,7 +62,6 @@ exports.addSite = catchAsync(async (req, res, next) => {
   handlerFactory.createOne(Site,siteValidation, logger)(req, res, next);
 });
 
-// Get all sites (Supports .populate() setups inside your custom handlerFactory)
 exports.getAllSites = catchAsync(async (req, res, next) => {
   const { value: validQuery, error } = GETJoiSiteSchema.validate(req.query);
   if (error) {
@@ -79,17 +78,14 @@ exports.getAllSites = catchAsync(async (req, res, next) => {
 
   handlerFactory.getAll(Site, populateOptions, logger, query)(req, res, next);
 });
-// Get single location site data by database ID
 exports.getSite = handlerFactory.getOne(Site, logger);
 
-// Update site configurations dynamically
 exports.updateSite = catchAsync(async (req, res, next) => {
   const { value: validData, error } = PATCHJoiSiteSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
-  // Block namespace conflicts during updates
   if (validData.siteName && validData.client) {
     const duplicateSite = await Site.findOne({
       siteName: validData.siteName,
@@ -105,7 +101,6 @@ exports.updateSite = catchAsync(async (req, res, next) => {
   handlerFactory.updateOne(Site, logger)(req, res, next);
 });
 
-// Remove site entry record completely
 exports.deleteSite = handlerFactory.deleteOne(Site, logger);
 
 

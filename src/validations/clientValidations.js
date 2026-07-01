@@ -40,7 +40,6 @@ const whatsAppNumber = Joi.string().trim().allow("").messages({
     "string.base": "WhatsApp number must be a string."
 });
 
-// Single string schema validation for standard address input
 const address = Joi.string().trim().messages({
     "any.required": "Address is required.",
     "string.empty": "Address cannot be empty."
@@ -56,7 +55,6 @@ const state = Joi.string().trim().messages({
     "string.empty": "Please select a valid state."
 });
 
-// POST Validation Schema
 const POSTJoiClientSchema = Joi.object({
     image: image.optional().allow(""),
     name: clientName.required(),
@@ -85,7 +83,6 @@ const PATCHJoiClientSchema = Joi.object({
   image: Joi.string().optional().allow("")
 });
 
-// GET Filter Validation Schema
 const GETJoiClientSchema = Joi.object({
     keyword: keyword.optional(),
     from: from.optional().allow(''),

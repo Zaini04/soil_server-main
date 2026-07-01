@@ -25,7 +25,7 @@ const fuelStockSchema = new mongoose.Schema(
    
   },
   {
-    timestamps: true, // Automatically manages createdAt and updatedAt
+    timestamps: true, 
   }
 );
 

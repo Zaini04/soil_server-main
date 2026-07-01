@@ -98,7 +98,6 @@ exports.updateVehicle = catchAsync(async (req, res, next) => {
     return next(new AppError(error.details[0].message, 400));
   }
 
-  // Prevent changing vehicle plate numbers to something already registered
   if (validData.vehicleNo) {
     const duplicateVehicle = await Vehicle.findOne({
       vehicleNo: validData.vehicleNo,
@@ -113,7 +112,6 @@ exports.updateVehicle = catchAsync(async (req, res, next) => {
   handlerFactory.updateOne(Vehicle, logger)(req, res, next);
 });
 
-// Delete vehicle from registry
 exports.deleteVehicle = handlerFactory.deleteOne(Vehicle, logger);
 
 exports.getVehicleDropdownList = async (req, res, next) => {

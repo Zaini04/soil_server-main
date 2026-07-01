@@ -84,7 +84,7 @@ const vehicleEntrySchema = new mongoose.Schema(
     remainingAmount: {
       type: Number,
       required: [true, "Remaining amount (Profit) calculation is required."],
-      default: 0, // Formula: totalRate - totalExpenses
+      default: 0, 
     },
     fuel: {
       type: String,
@@ -97,7 +97,6 @@ const vehicleEntrySchema = new mongoose.Schema(
       default: "----",
     },
 
-    // --- CLIENT PAYMENT FLOW (Single Way Structure) ---
     payment: {
       method: {
         type: String,
@@ -106,7 +105,7 @@ const vehicleEntrySchema = new mongoose.Schema(
       },
       amountReceived: {
         type: Number,
-        default: 0, // Kitna cash ya value mila
+        default: 0, 
       },
       checkNo: {
         type: String,
@@ -114,26 +113,25 @@ const vehicleEntrySchema = new mongoose.Schema(
       },
       fuelLiters: {
         type: Number,
-        default: 0, // Fuel method ke case me kitne liters mila
+        default: 0, 
       },
       fuelCompany: {
-      type: mongoose.Schema.Types.ObjectId,  // ✅ String → ObjectId
-      ref: 'FuelCompany',                    // ✅ ref add kiya
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'FuelCompany',                   
   },
       note: {
-        type: String, // Extra details, partial/full payment info, ya other description ke liye
+        type: String, 
         default: "",
       },
     },
 
-    // --- CLIENT LEDGER TRACKING ---
     clientDue: {
       type: Number,
-      default: 0, // Baqaya Raqam (TotalRate > AmountReceived)
+      default: 0, 
     },
     clientAdvance: {
       type: Number,
-      default: 0, // Extra Payment (AmountReceived > TotalRate)
+      default: 0, 
     },
     paymentStatus: {
       type: String,
@@ -158,13 +156,9 @@ const vehicleEntrySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// --- PRE-SAVE HOOK FOR AUTOMATIC CALCULATIONS ---
 vehicleEntrySchema.pre("save", function (next) {
-  // 1. Total Bill Rate Calculation
   this.totalRate = this.totalSftVehicles * this.rate;
 
-  // 2. Internal Profit Calculation (Revenue - Expenses)
-  // (Note: Aapke purane hook me 'this.diesel' likha tha jabki key 'dieselCost' hai, maine fix krdiya h)
   const totalExpenses =
     this.materialCost +
     this.dieselCost +
@@ -174,7 +168,6 @@ vehicleEntrySchema.pre("save", function (next) {
 
   this.remainingAmount = this.totalRate - totalExpenses;
 
-  // 3. Client Ledger Logic (Due vs Advance Tracking)
   const received = this.payment.amountReceived || 0;
 
   if (received === 0) {
@@ -186,7 +179,6 @@ vehicleEntrySchema.pre("save", function (next) {
     this.clientAdvance = 0;
     this.paymentStatus = "partial";
   } else {
-    // Agar barabar paise diye hain ya extra advance de diya h
     this.clientDue = 0;
     this.clientAdvance = received - this.totalRate;
     this.paymentStatus = "received";

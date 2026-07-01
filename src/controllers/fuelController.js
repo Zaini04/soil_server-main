@@ -98,7 +98,6 @@ exports.addFuelStock = catchAsync(async (req, res, next) => {
   const fuelCompany = validData.fuelCompany.trim().toLowerCase();
   const fuelLiters = validData.fuelLiters;
 
-  // 2. Clear & Safe Upsert Query
   const updatedStock = await FuelStock.findOneAndUpdate(
     { fuelCompany: fuelCompany }, 
     { 
@@ -125,7 +124,6 @@ exports.addFuelStock = catchAsync(async (req, res, next) => {
     },
   });
 });
-// exports.getAllFuelRecords = handlerFactory.getAll(Fuel, logger);
 exports.getAllFuelStock = catchAsync(async (req, res, next) => {
 const { value: validQuery, error } = GETJoiFuelSchema.validate(req.query);
     if (error) {
@@ -210,7 +208,6 @@ exports.getEntryFuels = catchAsync(async (req, res, next) => {
   }
   req.query = validQuery;
 
-  // Default specific fields — frontend override kar sakta hai
   if (!req.query.fields) {
     req.query.fields = "_id,date,vehicle,fuelCompany,dieselInLitters,dieselCost";
   }

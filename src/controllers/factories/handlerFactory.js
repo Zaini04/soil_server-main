@@ -172,7 +172,6 @@ exports.updateOne = (Model, logger, options = {}) => catchAsync(async (req, res,
         req.body.image = relativeAddress;
       }
       
-    // Handle password hashing if admin wants to update user password case
     if (req.body.password) {
         req.body.password = await bcrypt.hash(req.body.password, 10);
     }
@@ -267,33 +266,6 @@ if (req.query.site) {
  
 
 
-// USAGE EXAMPLE (companyRecordsController.js):
-//
-//   exports.exportPdf = handlerFactory.exportPdf(CompanyRecords, {
-//     buildQuery: (req) => ({ client: req.params.id }),   // <-- flexible, any field
-//     dateField: "date",
-//     populate: [
-//       { path: "client",  select: "name" },
-//       { path: "site",    select: "siteName" },
-//       { path: "vehicle", select: "vehicleNo" },
-//     ],
-//     title:   (records) => records[0]?.client?.name || "Records",
-//     columns: [
-//       { header: "Date",     key: "date",         width: 65,  getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
-//       { header: "Bilty",    key: "biltyNo",      width: 50,  getValue: (r) => r.biltyNo },
-//       { header: "Site",     key: "site",         width: 80,  getValue: (r) => r.site?.siteName,     wrap: true },
-//       { header: "Vehicle",  key: "vehicle",      width: 60,  getValue: (r) => r.vehicle?.vehicleNo, wrap: true },
-//       { header: "Material", key: "materialType", width: 70,  getValue: (r) => r.materialType,       wrap: true },
-//       { header: "Rate",     key: "rate",         width: 50,  getValue: (r) => r.rate?.toLocaleString() },
-//       { header: "SFT",      key: "totalSft",     width: 50,  getValue: (r) => r.totalSft?.toLocaleString() },
-//       { header: "Amount",   key: "totalRate",    width: 110, getValue: (r) => r.totalRate?.toLocaleString() },
-//     ],
-//     totalsConfig: [
-//       { label: "TOTAL SFT",    field: "totalSft" },
-//       { label: "TOTAL AMOUNT", field: "totalRate", prefix: "Rs. " },
-//     ],
-//   });
-
 
 
 const fetchExportRecords = async (Model, options, req) => {
@@ -339,7 +311,6 @@ const computeTotals = (records, totalsConfig = []) => {
       if (compute) {
         acc[field] += compute(item) || 0;
       } else {
-        // Nested field support — "payment.amountReceived" handle karo
         const value = field.split(".").reduce((obj, key) => obj?.[key], item);
         acc[field] += value || 0;
       }

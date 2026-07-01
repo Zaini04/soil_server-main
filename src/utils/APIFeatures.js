@@ -12,7 +12,6 @@ class APIFeatures {
     
         let queryStr = {};
     
-        // Handle other conditions 
         if(queryObj.fuelLiters){
             queryStr.fuelLiters = queryObj.fuelLiters
         }
@@ -63,7 +62,6 @@ class APIFeatures {
             queryStr.autoIncrementId = queryObj.autoIncrementId;
         }
 
- // --- HANDLE DATE RANGE ---
 if (queryObj.from || queryObj.to) {
 queryStr[this.dateField] = {};    
     if (queryObj.from) {
@@ -78,7 +76,6 @@ queryStr[this.dateField] = {};
         queryStr[this.dateField].$lte = endDate;
     }
 }else if (queryObj.date) {
-    // Agar koi single date bheje (Puranay flow k liye fallback)
     const startOfDay = new Date(queryObj.date);
     startOfDay.setUTCHours(0, 0, 0, 0);
 

@@ -130,7 +130,6 @@ exports.entryVehicle = catchAsync(async (req, res, next) => {
   const { fuelCompany, dieselInLitters, isStockManaged } = validData;
 
 
-  // Sirf stock managed company ka check karo
   if (fuelCompany && dieselInLitters > 0 && isStockManaged) {
     const fuelStock = await FuelStock.findOne({ fuelCompany });
 
@@ -148,7 +147,6 @@ exports.entryVehicle = catchAsync(async (req, res, next) => {
 
   const entry = await EntryVehicle.create({...validData,createdBy:req.user._id});
 
-  // Sirf managed company ka stock minus hoga
   if (fuelCompany && dieselInLitters > 0 && isStockManaged) {
     await FuelStock.findOneAndUpdate(
       { fuelCompany },
@@ -174,28 +172,8 @@ exports.updateEntryVehicle = catchAsync(async (req, res, next) => {
 
 exports.deleteEntryVehicle = handlerFactory.removeFromDb(EntryVehicle, logger);
 
-// @route    GET /api/entry-vehicles
-// exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
-//   const { value: validQuery, error } = GETJoiEntryVehicleSchema.validate(req.query);
-//   if (error) {
-//     return next(new AppError(error.details[0].message, 400));
-//   }
-  
-//   req.query = validQuery;
-//   const query = {};
 
-  
-
-//   const populateOptions = [
-//     { path: "client", select: "name" },
-//     { path: "site", select: "siteName" },
-//     { path: "vehicle", select: "vehicleNo" }
-//   ];
-
-//   handlerFactory.getAll(EntryVehicle, populateOptions, logger, query)(req, res, next);
-// });
 exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
-  // 1. Joi validation checks parameters
   const { value: validQuery, error } = GETJoiEntryVehicleSchema.validate(req.query);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
@@ -218,7 +196,6 @@ exports.getAllEntryVehicles = catchAsync(async (req, res, next) => {
   handlerFactory.getAll(EntryVehicle, populateOptions, logger, query,"date")(req, res, next);
 });
 
-// @route    GET /api/entry-vehicles/client/:clientId
 exports.getEntriesByClient = catchAsync(async (req, res, next) => {
 
  
@@ -253,7 +230,6 @@ exports.getEntriesByVehicle = catchAsync(async (req, res, next) => {
 exports.generateBill = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
-  // 1. Find the vehicle entry
   const entry = await EntryVehicle.findById(id)
     .populate("client", "name")
     .populate("site", "siteName")
@@ -263,15 +239,12 @@ exports.generateBill = catchAsync(async (req, res, next) => {
     return next(new AppError("No vehicle entry found with this ID.", 404));
   }
 
-   // ✅ Empty string fix — ObjectId "" cast nahi hota
   if (!entry.payment.fuelCompany || entry.payment.fuelCompany === "") {
     entry.payment.fuelCompany = null;
   }
-  // 2. Bill status ko 'generated' kar dein
   entry.billStatus = "generated";
-  await entry.save(); // Pre-save fires automatically but won't alter states dangerously
+  await entry.save(); 
 
-  // 3. Poora document return karein taake frontend direct is details ko print format me use krly
   sendSuccessResponse(res, 200, logger, {
     message: "Bill generated successfully.",
     doc: entry
@@ -282,10 +255,8 @@ exports.generateBill = catchAsync(async (req, res, next) => {
 exports.recordPayment = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   
-  // Frontend se Formik ka pure object req.body me received hoga
   const { paymentMethod, amount, checkNo, fuelCompany, fuelLiters, note } = req.body;
 
-  // 1. Find Entry
   const entry = await EntryVehicle.findById(id);
   if (!entry) {
     return next(new AppError("No vehicle entry found with this ID to pay.", 404));
@@ -293,30 +264,23 @@ exports.recordPayment = catchAsync(async (req, res, next) => {
   if (!entry.payment.fuelCompany || entry.payment.fuelCompany === "") {
     entry.payment.fuelCompany = null;
   }
-  // 2. Map payload cleanly onto schema sub-object keys
-  // Agar method badal raha hai ya pehle 'pending' tha, toh naya method set karein
   entry.payment.method = paymentMethod.toLowerCase(); 
   
-  // Purani notes ke sath nayi note append (add) kar rahe hain taake history kharab na ho
   if (note) {
     entry.payment.note = entry.payment.note 
       ? `${entry.payment.note} | ${note}` 
       : note;
   }
 
-  // Naya amount jo received hua hai
   const newAmount = Number(amount || 0);
 
-  // 3. Increment (Add) amount instead of overwriting
-  // Pehle se jo amount received ho chuki hai, usme naya amount plus kar rahe hain
   entry.payment.amountReceived = (entry.payment.amountReceived || 0) + newAmount;
 
-  // Conditional setup based on method
   if (entry.payment.method === "check") {
     
     entry.payment.checkNo = checkNo || entry.payment.checkNo || "";
  } else if (entry.payment.method === "fuel") {
-  const parsedLiters = Number(fuelLiters || 0);  // ✅ ek baar parse karo
+  const parsedLiters = Number(fuelLiters || 0); 
 
   entry.payment.fuelLiters = (entry.payment.fuelLiters || 0) + parsedLiters;
   entry.payment.fuelCompany = fuelCompany || entry.payment.fuelCompany || null;
@@ -337,11 +301,8 @@ exports.recordPayment = catchAsync(async (req, res, next) => {
   }
 }
 
-  // Yeh trigger hote hi aapka pre-save hook background me updated amountReceived (8000 + 7000 = 15000)
-  // ko check karega aur clientDue ko 0 aur status ko "received" krdega!
   await entry.save();
 
-  // Populate references for smooth receipt printing on client-side
   const updatedEntry = await EntryVehicle.findById(id)
     .populate("client", "name")
     .populate("site", "siteName")
@@ -363,7 +324,6 @@ exports.getIncomeExpense = catchAsync(async (req, res, next) => {
   }
   req.query = validQuery;
 
-  // Default specific fields — frontend override kar sakta hai
   if (!req.query.fields) {
     req.query.fields = "_id,date,vehicle, totalRate,remainingAmount";
   }
@@ -418,7 +378,6 @@ if (matchStage.vehicle) {
         totalRateSum: 1,
         remainingAmountSum: 1,
 
-        // expense calculation
         totalExpense: {
           $subtract: ["$totalRateSum", "$remainingAmountSum"],
         },
@@ -468,7 +427,6 @@ const startOfNextMonth = new Date(
   1
 );
 
-  // const matchStage = features.queryObj || {};
 
   const dashboard = await EntryVehicle.aggregate([
     {

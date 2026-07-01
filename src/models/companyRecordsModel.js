@@ -60,7 +60,6 @@ const companyRecordsSchema = new mongoose.Schema(
 
   
   companyRecordsSchema.pre("save", function (next) {
-  // 1. Total  Rate Calculation
   this.totalRate = this.totalSft * this.rate;
   next()
   })

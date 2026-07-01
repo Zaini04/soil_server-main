@@ -1,10 +1,8 @@
 const Joi = require("joi");
 const { keyword, from, to, page, pageSize, sort, sortBy, fields, limit } = require("./baseJoiSchemas");
 
-// Helper regex to ensure hex MongoDB ObjectId string validation
 const objectIdRegEx = /^[0-9a-fA-F]{24}$/;
 
-// --- NESTED PAYMENT SCHEMAS FOR REUSABILITY ---
 const paymentJoiObject = Joi.object({
   method: Joi.string().valid("pending", "cash", "check", "fuel", "other").default("pending"),
   amountReceived: Joi.number().min(0).default(0),
@@ -39,9 +37,8 @@ const POSTJoiEntryVehicleSchema = Joi.object({
   }),
   rate: Joi.number().min(0).required(),
   totalSftVehicles: Joi.number().min(0).required(),
-  totalRate: Joi.number().min(0).optional(), // Pre-save handles this, so kept optional
+  totalRate: Joi.number().min(0).optional(), 
   
-  // --- INTERNAL EXPENSES (Hmary Apny Kharchy) ---
   materialCost: Joi.number().min(0).default(0),
   dieselCost: Joi.number().min(0).default(0),
   dieselInLitters: Joi.number().min(0).default(0),
@@ -53,11 +50,10 @@ const POSTJoiEntryVehicleSchema = Joi.object({
   driverExpense: Joi.number().min(0).default(0),
   loading: Joi.number().min(0).default(0),
   otherExpenses: Joi.number().empty("").optional().allow("",null).min(0).default(0),
-  remainingAmount: Joi.number().optional(), // Calculated dynamically in schema pre-save
+  remainingAmount: Joi.number().optional(), 
   vendor: Joi.string().allow("", null),
   fuel: Joi.string().allow("", null),
 
-  // --- CLIENT PAYMENT & LEDGER FIELDS ---
   payment: paymentJoiObject.default(),
   clientDue: Joi.number().min(0).default(0),
   clientAdvance: Joi.number().min(0).default(0),
@@ -91,9 +87,8 @@ const PATCHJoiEntryVehicleSchema = Joi.object({
   }),
   rate: Joi.number().min(0).required(),
   totalSftVehicles: Joi.number().min(0).required(),
-  totalRate: Joi.number().min(0).optional(), // Pre-save handles this, so kept optional
+  totalRate: Joi.number().min(0).optional(), 
   
-  // --- INTERNAL EXPENSES (Hmary Apny Kharchy) ---
   materialCost: Joi.number().min(0).default(0),
   dieselCost: Joi.number().min(0).default(0),
   dieselInLitters: Joi.number().min(0).default(0),
@@ -105,11 +100,10 @@ const PATCHJoiEntryVehicleSchema = Joi.object({
   driverExpense: Joi.number().min(0).default(0),
   loading: Joi.number().min(0).default(0),
   otherExpenses: Joi.number().empty("").optional().allow("",null).min(0).default(0),
-  remainingAmount: Joi.number().optional(), // Calculated dynamically in schema pre-save
+  remainingAmount: Joi.number().optional(), 
   vendor: Joi.string().allow("", null),
   fuel: Joi.string().allow("", null),
 
-  // --- CLIENT PAYMENT & LEDGER FIELDS ---
   payment: paymentJoiObject.default(),
   clientDue: Joi.number().min(0).default(0),
   clientAdvance: Joi.number().min(0).default(0),

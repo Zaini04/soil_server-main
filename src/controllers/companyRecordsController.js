@@ -74,12 +74,10 @@ exports.exportCompanyRecordsExcel = catchAsync(async (req, res) => {
     client: clientId,
   };
 
-  // Selected rows export
   if (ids.length > 0) {
     query._id = { $in: ids };
   }
 
-  // Site name => Site IDs
   if (req.query.site) {
     const sites = await Site.find({
       siteName: {
@@ -224,14 +222,10 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
   );
   doc.pipe(res);
 
-  // ─── PAGE CONSTANTS ───────────────────────────────────────────
   const pageLeft = 30;
   const pageRight = doc.page.width - 30;
   const tableWidth = pageRight - pageLeft; // 555
 
-  // ─── COLUMN DEFINITIONS ───────────────────────────────────────
-  // Sr(20) | Date(65) | Bilty(50) | Site(80) | Vehicle(60) | Material(70) | Rate(50) | SFT(50) | Amount(110)
-  // Total = 20+65+50+80+60+70+50+50+110 = 555
   const cols = {
     sr:       { x: pageLeft,       w: 30  },
     date:     { x: pageLeft + 20,  w: 65  },
@@ -249,9 +243,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
   const MIN_ROW_HEIGHT = 22;
   const FONT_SIZE = 8;
 
-  // ─── HELPER: draw table header ────────────────────────────────
   const drawTableHeader = (y) => {
-    // Light gray header background
     doc.rect(pageLeft, y, tableWidth, HEADER_HEIGHT).fill("#e8e8e8");
 
     doc.font("Helvetica-Bold").fontSize(FONT_SIZE).fillColor("#000000");
@@ -276,19 +268,16 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       });
     });
 
-    // Column dividers
     doc.strokeColor("#999999").lineWidth(0.5);
     Object.values(cols).slice(1).forEach(({ x }) => {
       doc.moveTo(x, y).lineTo(x, y + HEADER_HEIGHT).stroke();
     });
 
-    // Outer border
     doc.rect(pageLeft, y, tableWidth, HEADER_HEIGHT).stroke();
 
     return y + HEADER_HEIGHT;
   };
 
-  // ─── HELPER: calculate row height ─────────────────────────────
   const getRowHeight = (record) => {
     doc.font("Helvetica").fontSize(FONT_SIZE);
 
@@ -307,7 +296,6 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     return Math.max(maxHeight, MIN_ROW_HEIGHT);
   };
 
-  // ─── HELPER: draw one data row ─────────────────────────────────
   const drawRow = (record, index, y, rowHeight) => {
     const bg = index % 2 === 0 ? "#f9f9f9" : "#ffffff";
     doc.rect(pageLeft, y, tableWidth, rowHeight).fill(bg);
@@ -366,19 +354,15 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       { width: cols.total.w - PADDING.left * 2, lineBreak: false }
     );
 
-    // Column dividers
     doc.strokeColor("#cccccc").lineWidth(0.5);
     Object.values(cols).slice(1).forEach(({ x }) => {
       doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
     });
 
-    // Row border
     doc.rect(pageLeft, y, tableWidth, rowHeight).stroke();
   };
 
-  // ══════════════════════════════════════════════════════════════
-  // DOCUMENT HEADER
-  // ══════════════════════════════════════════════════════════════
+
   const headerY = 30;
   const headerHeight = 60;
 
@@ -405,9 +389,6 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       { width: tableWidth, align: "right" }
     );
 
-  // ══════════════════════════════════════════════════════════════
-  // TABLE
-  // ══════════════════════════════════════════════════════════════
   let y = headerY + headerHeight + 28;
   y = drawTableHeader(y);
 
@@ -426,9 +407,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     y += rowHeight;
   });
 
-  // ══════════════════════════════════════════════════════════════
-  // TOTALS SECTION
-  // ══════════════════════════════════════════════════════════════
+
   y += 10;
   const totalHeight = 38;
 
@@ -437,7 +416,6 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     y = 30;
   }
 
-  // Light gray background for totals
   doc.rect(pageLeft, y, tableWidth, totalHeight).fill("#e8e8e8");
   doc.rect(pageLeft, y, tableWidth, totalHeight).stroke();
 
