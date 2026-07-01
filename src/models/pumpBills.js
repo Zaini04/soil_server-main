@@ -61,7 +61,7 @@ const pumpBillsSchema = new mongoose.Schema(
 
   
   pumpBillsSchema.pre("save", function (next) {
-  this.totalAmounts = (this.totalLiters * this.todayDieselRate) + totalLoseOilAmount;
+  this.totalAmounts = (this.totalLiters * this.todayDieselRate) + this.totalLoseOilAmount;
   next()
   })
 

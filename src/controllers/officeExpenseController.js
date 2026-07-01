@@ -3,7 +3,6 @@ const APIFeatures = require("../utils/APIFeatures");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const { sendSuccessResponse } = require("../utils/helpers");
-const { POSTJoiCompanyRecordsSchema, GETJoiCompanyRecordsSchema } = require("../validations/companyRecordsValidation");
 const { POSTJoiOfficeExpenseSchema, OfficeExpenseSchema, GETJoiOfficeExpenseSchema } = require("../validations/officeExpenseValidations");
 const logger = require("../logger")("OfficeExpense_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
@@ -23,7 +22,9 @@ const expenseTotals = [
 
 ];
  
-const expenseRecordPopulate = [];
+const expenseRecordPopulate = [
+   
+];
 
 
 exports.exportExpenseRecordsExcel = handlerFactory.exportExcel(OfficeExpense, {
@@ -71,3 +72,17 @@ exports.getAllOfficeExpense = catchAsync(async (req,res, next)=>{
 
   handlerFactory.getAll(OfficeExpense, populateOptions, logger, query)(req, res, next)
 })
+
+exports.updateOfficeExpense = catchAsync(async(req,res, next)=>{
+
+    const { value: validData, error } = POSTJoiOfficeExpenseSchema.validate(req.body);
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.body = validData;
+  handlerFactory.updateOne(OfficeExpense, logger)(req, res, next);
+
+})
+
+exports.deleteOfficeExpense = handlerFactory.removeFromDb(OfficeExpense, logger);

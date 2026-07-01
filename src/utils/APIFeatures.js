@@ -16,6 +16,9 @@ class APIFeatures {
         if(queryObj.fuelLiters){
             queryStr.fuelLiters = queryObj.fuelLiters
         }
+        if(queryObj.expenseType){
+            queryStr.expenseType = queryObj.expenseType
+        }
          if (queryObj.vehicle) {
     queryStr.vehicle = queryObj.vehicle;
   }

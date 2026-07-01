@@ -48,6 +48,21 @@ exports.getCompanyRecordsByClient = catchAsync(async (req, res, next) => {
 
 });
 
+exports.updateCompanyRecord = catchAsync(async(req,res, next)=>{
+
+    const { value: validData, error } = POSTJoiCompanyRecordsSchema.validate(req.body);
+  if (error) {
+    return next(new AppError(error.details[0].message, 400));
+  }
+
+  req.body = validData;
+  handlerFactory.updateOne(CompanyRecords, logger)(req, res, next);
+
+})
+
+exports.deleteCompanyRecord = handlerFactory.removeFromDb(CompanyRecords, logger);
+
+
 
 
 

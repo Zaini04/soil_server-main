@@ -8,7 +8,7 @@ const officeExpenseSchema = new mongoose.Schema(
     },
     expenseType: {
             type: String,
-            enum: ['Office', 'Site',],
+            enum: ['Office', 'Site'],
             default: 'Office',
             required: [true, "Expense type is required"]
         },
