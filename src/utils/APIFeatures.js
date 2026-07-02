@@ -19,7 +19,9 @@ class APIFeatures {
             queryStr.expenseType = queryObj.expenseType
         }
          if (queryObj.vehicle) {
-    queryStr.vehicle = queryObj.vehicle;
+    queryStr.vehicle = Array.isArray(queryObj.vehicle)
+      ? { $in: queryObj.vehicle }
+      : queryObj.vehicle;
   }
     if (queryObj.client) {
   queryStr.client = Array.isArray(queryObj.client)

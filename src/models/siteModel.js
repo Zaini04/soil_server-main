@@ -5,10 +5,12 @@ const materialRateSchema = new mongoose.Schema({
     type: String, 
     required: [true, "Material type is required."], 
     trim: true,
+    lowercase: true,
   },
   rateType: {
     type: String,
     required: [true, "Rate Type is required."],
+    lowercase: true,
     enum: {
       values: ["per sft", "per vehicle"],
       message: "Rate Type must be either: per sft or per vehicle",
@@ -28,8 +30,8 @@ const siteSchema = new mongoose.Schema(
       ref: "Client",
       required: [true, "A site must be assigned to a client."],
     },
-    siteName: { type: String, required: [true, "Site name is required."], trim: true },
-    address: { type: String, required: [true, "Site address is required."], trim: true },
+    siteName: { type: String, required: [true, "Site name is required."], trim: true , lowercase : true},
+    address: { type: String, required: [true, "Site address is required."], trim: true , lowercase : true},
     image: { type: String, default: "" },
     
     materialsRates: [materialRateSchema], 

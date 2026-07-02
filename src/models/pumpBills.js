@@ -9,7 +9,8 @@ const pumpBillsSchema = new mongoose.Schema(
     slipNo:{
         type:String,
         required: [true, " Bilty number is required"],
-        unique:true
+        unique:true,
+        lowercase:true,
     },
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,

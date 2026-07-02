@@ -9,7 +9,9 @@ const companyRecordsSchema = new mongoose.Schema(
     biltyNo:{
         type:String,
         required: [true, " Bilty number is required"],
-        unique:true
+        unique:true,
+        lowercase:true,
+        trim:true
     },
     vehicle: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,6 +31,8 @@ const companyRecordsSchema = new mongoose.Schema(
      materialType: {
       type: String,
       required: [true, "Material type is required."],
+      lowecase:true,
+      trim:true
     },
     rate: {
       type: Number,

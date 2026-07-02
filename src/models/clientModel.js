@@ -7,11 +7,16 @@ const ClientSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: [true, "Client name is required"]
+        required: [true, "Client name is required"],
+        trim: true,
+        lowercase: true,
+
     },
     fatherOrHusbandName: {
         type: String,
-        required: [true, "Father's or Husband's name is required"]
+        required: [true, "Father's or Husband's name is required"],
+        trim: true,
+        lowercase: true,
     },
     cnicOrNicop: {
         type: String,

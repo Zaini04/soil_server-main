@@ -97,7 +97,11 @@ exports.addFuelStock = catchAsync(async (req, res, next) => {
 
   const fuelCompany = validData.fuelCompany.trim().toLowerCase();
   const fuelLiters = validData.fuelLiters;
+  if(!fuelCompany){
+    return next(new AppError("Fuel company  is required.", 400));
+  }
 
+  console.log(fuelCompany)
   const updatedStock = await FuelStock.findOneAndUpdate(
     { fuelCompany: fuelCompany }, 
     { 

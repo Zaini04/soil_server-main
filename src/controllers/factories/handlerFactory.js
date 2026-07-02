@@ -177,7 +177,7 @@ exports.updateOne = (Model, logger, options = {}) => catchAsync(async (req, res,
     }
 
     
-    const updatedDoc = await Model.findByIdAndUpdate(id, {...req.body,updateBy:req.user._id}, {
+    const updatedDoc = await Model.findByIdAndUpdate(id, {...req.body,updatedBy:req.user._id}, {
         new: true,
         runValidators: true,
         

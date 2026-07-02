@@ -161,6 +161,7 @@ exports.entryVehicle = catchAsync(async (req, res, next) => {
 });
 
 exports.updateEntryVehicle = catchAsync(async (req, res, next) => {
+  console.log("up",req.body)
   const { value: validData, error } = PATCHJoiEntryVehicleSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));

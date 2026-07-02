@@ -24,11 +24,14 @@ const vehicleEntrySchema = new mongoose.Schema(
     materialType: {
       type: String,
       required: [true, "Material type is required."],
+      lowercase: true,
+      trim: true
     },
     rateType: {
       type: String,
       required: [true, "Rate type is required."],
       enum: ["per sft", "per vehicle"],
+      lowercase: true,
     },
     rate: {
       type: Number,

@@ -104,9 +104,6 @@ const PATCHJoiEntryVehicleSchema = Joi.object({
   vendor: Joi.string().allow("", null),
   fuel: Joi.string().allow("", null),
 
-  payment: paymentJoiObject.default(),
-  clientDue: Joi.number().min(0).default(0),
-  clientAdvance: Joi.number().min(0).default(0),
   
   paymentStatus: Joi.string().valid("pending", "partial", "received").default("pending"),
   billStatus: Joi.string().valid("generated", "pending").default("pending")

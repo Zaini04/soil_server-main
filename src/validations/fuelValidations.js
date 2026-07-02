@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { from, to } = require("./baseJoiSchemas");
 
 const fuelCompany = Joi.string().trim().min(2).max(100).messages({
   "string.empty": "Fuel company name cannot be empty.",
@@ -34,8 +35,8 @@ const GETJoiFuelSchema = Joi.object({
   
     keyword: Joi.string().optional().allow(""),
     date:Joi.string().optional().allow(""),
-    from: Joi.date().optional().allow(''),
-    to: Joi.date().optional().allow(''),
+    from: from.optional().allow(''),
+  to: to.optional().allow(''),
     page: Joi.number().optional(),
     pageSize: Joi.number().optional(),
     sort: Joi.string().optional(),

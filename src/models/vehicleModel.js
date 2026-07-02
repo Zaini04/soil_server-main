@@ -9,7 +9,9 @@ const VehicleSchema = new mongoose.Schema({
     },
     ownerName :{
          type:String,
-        required:[true,"Owner name is required "]
+        required:[true,"Owner name is required "],
+        trim:true,
+        lowercase:true
 
     },
     typeVehicle :{

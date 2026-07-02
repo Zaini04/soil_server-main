@@ -14,7 +14,10 @@ const officeExpenseSchema = new mongoose.Schema(
         },
      employeeName: {
         type: String,
-        required: [true, "Employee name is required"]
+        required: [true, "Employee name is required"],
+        lowercase: true,
+        trim: true,
+      
     },
      amount: {
       type: Number,

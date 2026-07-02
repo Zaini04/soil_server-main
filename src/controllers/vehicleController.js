@@ -117,7 +117,7 @@ exports.deleteVehicle = handlerFactory.deleteOne(Vehicle, logger);
 exports.getVehicleDropdownList = async (req, res, next) => {
   try {
     const vehicles = await Vehicle.find({ status: "Active" }) 
-      .select("_id vehicleNo")
+      .select("_id vehicleNo ownerName")
       .lean();
 
   
