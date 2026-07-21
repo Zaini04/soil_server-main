@@ -65,16 +65,7 @@ exports.getMy = (Model, populateItems = {}, logger, query = {}) => {
 exports.getAll = (Model, populateItems = {}, logger, query = {},  dateField = "createdAt") => {
     return catchAsync(async (req, res, next) => {;
 
-        if (req.query.client) {
-  const clients = await Client.find({
-    name: {
-      $regex: req.query.client,
-      $options: "i",
-    },
-  }).select("_id");
 
-  req.query.client = clients.map((c) => c._id);
-}
   if (req.query.fuelCompany) {
   const fuelCompanies = await FuelCompany.find({
     fuelCompany: {
@@ -177,10 +168,13 @@ exports.updateOne = (Model, logger, options = {}) => catchAsync(async (req, res,
     }
 
     
-    const updatedDoc = await Model.findByIdAndUpdate(id, {...req.body,updatedBy:req.user._id}, {
-        new: true,
-        runValidators: true,
-        
+    Object.assign(doc, req.body, { updatedBy: req.user._id });
+
+    const updatedDoc = await doc.save();
+
+    return sendSuccessResponse(res, 200, logger, {
+        message: 'Updated successfully.',
+        doc: updatedDoc
     });
 
     return sendSuccessResponse(res, 200, logger, {
@@ -323,8 +317,15 @@ exports.exportExcel = (Model, options) =>
   catchAsync(async (req, res) => {
     const { columns = [], totalsConfig = [], sheetName = "Records" } = options;
 
-    const records = await fetchExportRecords(Model, options, req);
-    const totals = computeTotals(records, totalsConfig);
+// Custom fetch agar diya ho, warna purana default
+    const records = options.fetchRecords
+      ? await options.fetchRecords(req)
+      : await fetchExportRecords(Model, options, req);
+
+    // Custom totals agar diya ho, warna purana default
+    const totals = options.getTotals
+      ? await options.getTotals(records, req)
+      : computeTotals(records, totalsConfig);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(sheetName);
@@ -378,13 +379,18 @@ exports.exportPdf = (Model, options) =>
       title: getTitle,     
     } = options;
 
-    const records = await fetchExportRecords(Model, options, req);
+   const records = options.fetchRecords
+      ? await options.fetchRecords(req)
+      : await fetchExportRecords(Model, options, req);
 
     if (!records.length) {
       return res.status(404).json({ success: false, message: "No records found" });
     }
 
-    const totals = computeTotals(records, totalsConfig);
+    const totals = options.getTotals
+      ? await options.getTotals(records, req)
+      : computeTotals(records, totalsConfig);
+
     const titleText = typeof getTitle === "function"
       ? getTitle(records)
       : getTitle || "Records";

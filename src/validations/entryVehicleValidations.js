@@ -54,7 +54,7 @@ const POSTJoiEntryVehicleSchema = Joi.object({
   vendor: Joi.string().allow("", null),
   fuel: Joi.string().allow("", null),
 
-  payment: paymentJoiObject.default(),
+  payment: paymentJoiObject.optional(),
   clientDue: Joi.number().min(0).default(0),
   clientAdvance: Joi.number().min(0).default(0),
   
@@ -104,11 +104,13 @@ const PATCHJoiEntryVehicleSchema = Joi.object({
   vendor: Joi.string().allow("", null),
   fuel: Joi.string().allow("", null),
 
-  
+  clientDue: Joi.number().min(0).optional(),
+  clientAdvance: Joi.number().min(0).optional(),
+  payment: paymentJoiObject.optional(),
   paymentStatus: Joi.string().valid("pending", "partial", "received").default("pending"),
   billStatus: Joi.string().valid("generated", "pending").default("pending")
 });
-
+ 
 
 const GETJoiEntryVehicleSchema = Joi.object({
   keyword: keyword.optional(),

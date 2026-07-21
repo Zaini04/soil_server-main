@@ -131,7 +131,7 @@ exports.deleteClient = handlerFactory.deleteOne(Client, logger);
 exports.getClientDropdownList = async (req, res, next) => {
   try {
     const clients = await Client.find({ status: "Active" }) 
-      .select("_id name")
+      .select("_id name phoneNumber")
       .lean();
 
   

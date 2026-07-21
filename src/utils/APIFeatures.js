@@ -23,10 +23,11 @@ class APIFeatures {
       ? { $in: queryObj.vehicle }
       : queryObj.vehicle;
   }
-    if (queryObj.client) {
-  queryStr.client = Array.isArray(queryObj.client)
-    ? { $in: queryObj.client }
-    : queryObj.client;
+
+if (queryObj.client ) {
+queryStr.client = Array.isArray(queryObj.client)
+      ? { $in: queryObj.client }
+      : queryObj.client;
 }
 
  
@@ -53,8 +54,23 @@ class APIFeatures {
         }
         
         if(queryObj.name){
-            queryStr.name = queryObj.name
+const mongoose = require('mongoose');
+    
+    // Check karein agar bheji gayi cheez 24-character ki valid MongoDB ObjectId hai
+    if (mongoose.Types.ObjectId.isValid(queryObj.name)) {
+        queryStr._id = queryObj.name; // Agar ID hai to _id field par query lagayein
+    } else {
+        queryStr.name = { $regex: queryObj.name, $options: 'i' }; // Agar normal name hai to regex chalayein
+    }            
         }
+        if (queryObj._id) {
+    queryStr._id = queryObj._id;
+}
+      if (queryObj.employee) {
+    queryStr.employee = Array.isArray(queryObj.employee)
+      ? { $in: queryObj.employee }
+      : queryObj.employee;
+}
 
         if(queryObj.siteName){
             queryStr.siteName = queryObj.siteName

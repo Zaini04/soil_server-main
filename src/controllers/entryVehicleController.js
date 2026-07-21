@@ -69,7 +69,7 @@ const entryVehiclesTotals = [
   },
   { label: "TOTAL  Remaining", field: "remainingAmount", prefix: "Rs. " },
   { label: "TOTAL  Received", field: "payment.amountReceived", prefix: "Rs. " },
-  { label: "TOTAL  Remaining", field: "clientDue", prefix: "Rs. " },
+  { label: "TOTAL  Due", field: "clientDue", prefix: "Rs. " },
 ];
  
 const entryVehiclesRecordPopulate = [
