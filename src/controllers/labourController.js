@@ -3,8 +3,8 @@ const { sendSuccessResponse } = require("../utils/helpers");
 const catchAsync = require('../utils/catchAsync');
 const logger = require("../logger")("LABOUR_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
-const Labour = require("../models/LabourModel");
-const LabourExpense = require("../models/LabourExpenseModel");
+const Labour = require("../models/labourModel");
+const LabourExpense = require("../models/labourExpenseModel");
 const { LabourValidation, GETJoiLabourSchema, PATCHJoiLabourSchema } = require("../validations/labourValidations");
 const { POSTJoiLabourExpenseSchema, GETJoiLabourExpenseSchema } = require("../validations/labourExpenseValidations");
 
