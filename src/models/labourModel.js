@@ -1,17 +1,15 @@
-const { number } = require("joi");
 const mongoose = require("mongoose");
 
-const EmployeeSchema = new mongoose.Schema({
+const LabourSchema = new mongoose.Schema({
     image: {
         type: String,
-        default: "" 
+        default: ""
     },
     name: {
         type: String,
-        required: [true, "Client name is required"],
+        required: [true, "Labour name is required"],
         trim: true,
         lowercase: true,
-
     },
     fatherOrHusbandName: {
         type: String,
@@ -34,7 +32,6 @@ const EmployeeSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: [true, "Email address is required"]
     },
     address: {
         type: String,
@@ -50,25 +47,20 @@ const EmployeeSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Active', 'Inactive','Blocked',"Deleted"],
+        enum: ['Active', 'Inactive', 'Blocked', "Deleted"],
         default: 'Active',
         required: [true, "Status is required"]
     },
-    monthlySalary:{
-        type:Number,
-        required:[true,"monthlySalary is required"]
-    },
-
-     createdBy: {
+    createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', 
+        ref: 'User',
         required: true
-      },
-      updatedBy: {
+    },
+    updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User' 
-      }
+        ref: 'User'
+    }
 }, { timestamps: true });
 
-const Employee = mongoose.model('Employee', EmployeeSchema);
-module.exports = Employee;
+const Labour = mongoose.model('Labour', LabourSchema);
+module.exports = Labour;

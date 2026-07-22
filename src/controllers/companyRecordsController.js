@@ -4,7 +4,7 @@ const APIFeatures = require("../utils/APIFeatures");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const { sendSuccessResponse } = require("../utils/helpers");
-const { POSTJoiCompanyRecordsSchema, GETJoiCompanyRecordsSchema } = require("../validations/companyRecordsValidation");
+const { POSTJoiCompanyRecordsSchema, GETJoiCompanyRecordsSchema, PATCHJoiCompanyRecordsSchema } = require("../validations/companyRecordsValidation");
 const logger = require("../logger")("CompanyRecords_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
 const ExcelJS = require("exceljs");
@@ -38,7 +38,7 @@ exports.getCompanyRecordsByClient = catchAsync(async (req, res, next) => {
   req.query = validQuery;
 
     const populateOptions = [
-    { path: "client", select: "name" },
+    { path: "client", select: "name phoneNumber image" },
     { path: "site", select: "siteName" },
     { path: "vehicle", select: "vehicleNo  typeVehicle" },
     { path: "createdBy", select: "username" },
@@ -48,18 +48,308 @@ exports.getCompanyRecordsByClient = catchAsync(async (req, res, next) => {
 
 });
 
-exports.updateCompanyRecord = catchAsync(async(req,res, next)=>{
+exports.getAllCompanyExpenses = catchAsync(async (req, res, next) => {
+    const { value: validQuery, error } = GETJoiCompanyRecordsSchema.validate(req.query);
+    if (error) {
+        return next(new AppError(error.details[0].message, 400));
+    }
+    req.query = validQuery;
 
-    const { value: validData, error } = POSTJoiCompanyRecordsSchema.validate(req.body);
+    if (!req.query.from && !req.query.to) {
+        const now = new Date();
+        req.query.from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+        req.query.to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999)).toISOString();
+    }
+
+    const query = {};
+    const populateOptions = [
+        { path: "createdBy", select: "username" },
+        { path: "client", select: "name phoneNumber image" },
+        {path:"site",select:"siteName "},
+            { path: "vehicle", select: "vehicleNo  typeVehicle" },
+
+        
+    ];
+
+    handlerFactory.getAll(CompanyRecords, populateOptions, logger, query, "date")(req, res, next);
+});
+
+exports.getCompanyExpenseSummary = catchAsync(async (req, res, next) => {
+  const { client, from, to } = req.query;
+
+  if (!client) {
+    return next(new AppError("Client id is required.", 400));
+  }
+
+  let startDate, endDate;
+  if (from && to) {
+    startDate = new Date(from);
+    startDate.setUTCHours(0, 0, 0, 0);
+    endDate = new Date(to);
+    endDate.setUTCHours(23, 59, 59, 999);
+  } else {
+    const now = new Date();
+    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  }
+
+  const Client = require("../models/clientModel");
+  const clientDoc = await Client.findById(client).select("name phoneNumber");
+  if (!clientDoc) {
+    return next(new AppError("Client not found.", 404));
+  }
+
+  const agg = await CompanyRecords.aggregate([
+    {
+      $match: {
+        client: clientDoc._id,
+        date: { $gte: startDate, $lte: endDate },
+      },
+    },
+    { $group: { _id: null, totalSpent: { $sum: "$totalRate" }, totalSft: { $sum: "$totalSft" } } },
+  ]);
+
+  const totalSpent = agg[0]?.totalSpent || 0;
+  const totalSft = agg[0]?.totalSft || 0;
+
+  sendSuccessResponse(res, 200, logger, {
+    client: {
+      _id: clientDoc._id,
+      name: clientDoc.name,
+      phoneNumber: clientDoc.phoneNumber,
+    },
+    totalSpent,
+    totalSft,
+    period: { from: startDate, to: endDate },
+  });
+});
+
+
+const getExportPeriod = (req) => {
+  const { from, to } = req.query;
+  if (from && to) {
+    const startDate = new Date(from);
+    startDate.setUTCHours(0, 0, 0, 0);
+    const endDate = new Date(to);
+    endDate.setUTCHours(23, 59, 59, 999);
+    return { startDate, endDate };
+  }
+  const now = new Date();
+  const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  return { startDate, endDate };
+};
+
+const fetchAllClientsSummary = async (req) => {
+  const { startDate, endDate } = getExportPeriod(req);
+  const Client = require("../models/clientModel");
+
+  const agg = await CompanyRecords.aggregate([
+    { $match: { date: { $gte: startDate, $lte: endDate } } },
+    { $group: { _id: "$client", totalExpense: { $sum: "$totalRate" }, totalSft: { $sum: "$totalSft" } } },
+  ]);
+
+  const expenseMap = {};
+  agg.forEach((e) => (expenseMap[e._id.toString()] = { totalExpense: e.totalExpense, totalSft: e.totalSft }));
+
+  const clients = await Client.find({ status: "Active" })
+    .select("name phoneNumber")
+    .lean();
+
+  return clients.map((c) => {
+    const stats = expenseMap[c._id.toString()] || { totalExpense: 0, totalSft: 0 };
+    return {
+      ...c,
+      totalExpense: stats.totalExpense,
+      totalSft: stats.totalSft,
+    };
+  });
+};
+
+const clientSummaryColumns = [
+  { header: "Client", key: "name", width: 60, getValue: (r) => r.name || "" },
+  { header: "Phone", key: "phoneNumber", width: 50, getValue: (r) => r.phoneNumber || "" },
+  { header: "Total Sft", key: "totalSft", width: 50, getValue: (r) => r.totalSft ?? 0 },
+  { header: "Total Amount", key: "totalExpense", width: 50, getValue: (r) => r.totalExpense ?? 0 },
+];
+
+const clientSummaryTotals = (records) => ({
+  totalSft: records.reduce((sum, r) => sum + (r.totalSft || 0), 0),
+  totalExpense: records.reduce((sum, r) => sum + (r.totalExpense || 0), 0),
+});
+
+const clientSummaryTotalsConfig = [
+  { label: "TOTAL Sft", field: "totalSft" },
+  { label: "TOTAL Amount", field: "totalExpense", prefix: "Rs. " },
+];
+
+const fetchSingleClientRecords = async (req) => {
+  const { startDate, endDate } = getExportPeriod(req);
+
+  return CompanyRecords.find({
+    client: req.query.client,
+    date: { $gte: startDate, $lte: endDate },
+  })
+    .populate([
+      { path: "createdBy", select: "username" },
+      { path: "client", select: "name phoneNumber" },
+      { path: "site", select: "siteName" },
+      { path: "vehicle", select: "vehicleNo typeVehicle" },
+    ])
+    .sort({ date: -1 });
+};
+
+const companyExpenseDetailColumns = [
+  { header: "Date", key: "date", width: 55, getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Client", key: "client", width: 45, getValue: (r) => r.client?.name || "" },
+  { header: "Client No", key: "phoneNumber", width: 80, getValue: (r) => r.client?.phoneNumber || "" },
+  { header: "Bilty No", key: "biltyNo", width: 45, getValue: (r) => r.biltyNo || "" },
+  { header: "Site", key: "site", width: 55, getValue: (r) => r.site?.siteName || "" },
+  { header: "Vehicle", key: "vehicle", width: 50, getValue: (r) => r.vehicle?.vehicleNo || "" },
+  { header: "Material", key: "materialType", width: 50, getValue: (r) => r.materialType || "" },
+  { header: "Rate", key: "rate", width: 40, getValue: (r) => r.rate ?? 0 },
+  { header: "Total Sft", key: "totalSft", width: 45, getValue: (r) => r.totalSft ?? 0 },
+  { header: "Amount", key: "totalRate", width: 50, getValue: (r) => r.totalRate ?? 0 },
+];
+
+const companyExpenseDetailTotals = (records) => ({
+  totalSft: records.reduce((sum, r) => sum + (r.totalSft || 0), 0),
+  totalExpense: records.reduce((sum, r) => sum + (r.totalRate || 0), 0),
+});
+
+const companyExpenseDetailTotalsConfig = [
+  { label: "TOTAL Sft", field: "totalSft" },
+  { label: "TOTAL Amount", field: "totalExpense", prefix: "Rs. " },
+];
+
+const fetchSelectedCompanyRecords = async (req) => {
+  const { ids = [] } = req.body || {};
+
+  return CompanyRecords.find({ _id: { $in: ids } })
+    .populate([
+      { path: "createdBy", select: "username" },
+      { path: "client", select: "name phoneNumber" },
+      { path: "site", select: "siteName" },
+      { path: "vehicle", select: "vehicleNo typeVehicle" },
+    ])
+    .sort({ date: -1 });
+};
+
+const selectedCompanyRecordsTotals = (records) => ({
+  totalSft: records.reduce((sum, r) => sum + (r.totalSft || 0), 0),
+  totalExpense: records.reduce((sum, r) => sum + (r.totalRate || 0), 0),
+});
+
+const selectedCompanyRecordsTotalsConfig = [
+  { label: "TOTAL Sft", field: "totalSft" },
+  { label: "TOTAL Amount", field: "totalExpense", prefix: "Rs. " },
+];
+
+exports.exportCompanyExpenseExcel = catchAsync(async (req, res, next) => {
+  const hasSelectedIds = Array.isArray(req.body?.ids) && req.body.ids.length > 0;
+  const isSingleClient = !hasSelectedIds && !!req.query.client;
+
+  if (hasSelectedIds) {
+
+    return handlerFactory.exportExcel(CompanyRecords, {
+      fetchRecords: fetchSelectedCompanyRecords,
+      getTotals: selectedCompanyRecordsTotals,
+      columns: companyExpenseDetailColumns,
+      totalsConfig: selectedCompanyRecordsTotalsConfig,
+      sheetName: `Company Records`,
+    })(req, res, next);
+  }
+
+  if (isSingleClient) {
+    const Client = require("../models/clientModel");
+    const clientDoc = await Client.findById(req.query.client).select("name");
+    const clientName = clientDoc?.name || "Client";
+    return handlerFactory.exportExcel(CompanyRecords, {
+      fetchRecords: fetchSingleClientRecords,
+      getTotals: companyExpenseDetailTotals,
+      columns: companyExpenseDetailColumns,
+      totalsConfig: companyExpenseDetailTotalsConfig,
+      sheetName: `${clientName} - Company Records`,
+    })(req, res, next);
+  }
+
+  return handlerFactory.exportExcel(CompanyRecords, {
+    fetchRecords: fetchAllClientsSummary,
+    getTotals: clientSummaryTotals,
+    columns: clientSummaryColumns,
+    totalsConfig: clientSummaryTotalsConfig,
+    sheetName: "All Clients Expense Summary",
+  })(req, res, next);
+});
+
+exports.exportCompanyExpensePdf = catchAsync(async (req, res, next) => {
+  const hasSelectedIds = Array.isArray(req.body?.ids) && req.body.ids.length > 0;
+  const isSingleClient = !hasSelectedIds && !!req.query.client;
+
+  if (hasSelectedIds) {
+    return handlerFactory.exportPdf(CompanyRecords, {
+      fetchRecords: fetchSelectedCompanyRecords,
+      getTotals: selectedCompanyRecordsTotals,
+      columns: companyExpenseDetailColumns,
+      totalsConfig: selectedCompanyRecordsTotalsConfig,
+      title: "Company Records",
+    })(req, res, next);
+  }
+
+  if (isSingleClient) {
+    const Client = require("../models/clientModel");
+    const clientDoc = await Client.findById(req.query.client).select("name");
+    const clientName = clientDoc?.name || "Client";
+    return handlerFactory.exportPdf(CompanyRecords, {
+      fetchRecords: fetchSingleClientRecords,
+      getTotals: companyExpenseDetailTotals,
+      columns: companyExpenseDetailColumns,
+      totalsConfig: companyExpenseDetailTotalsConfig,
+      title: `${clientName} - Company Records`,
+    })(req, res, next);
+  }
+
+  return handlerFactory.exportPdf(CompanyRecords, {
+    fetchRecords: fetchAllClientsSummary,
+    getTotals: clientSummaryTotals,
+    columns: clientSummaryColumns,
+    totalsConfig: clientSummaryTotalsConfig,
+    title: "All Clients Expense Summary",
+  })(req, res, next);
+});
+
+// exports.updateCompanyRecord = catchAsync(async(req,res, next)=>{
+
+//     const { value: validData, error } = POSTJoiCompanyRecordsSchema.validate(req.body);
+//   if (error) {
+//     return next(new AppError(error.details[0].message, 400));
+//   }
+
+//   req.body = validData;
+//   handlerFactory.updateOne(CompanyRecords, logger)(req, res, next);
+
+// })
+
+
+exports.updateCompanyRecord = catchAsync(async (req, res, next) => {
+  const { value: validData, error } = PATCHJoiCompanyRecordsSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
+  if (validData.biltyNo) {
+    const duplicateRecord = await CompanyRecords.findOne({
+      biltyNo: validData.biltyNo,
+      _id: { $ne: req.params.id },
+    });
+    if (duplicateRecord) {
+      return next(new AppError("This Bilty number is already assigned to another record.", 400));
+    }
+  }
+
   req.body = validData;
   handlerFactory.updateOne(CompanyRecords, logger)(req, res, next);
-
-})
-
+});
 exports.deleteCompanyRecord = handlerFactory.removeFromDb(CompanyRecords, logger);
 
 

@@ -22,7 +22,6 @@ const employeeRecordColumns = [
 const employeeTotals = [];
  
 const employeeRecordPopulate = [];
-
 const getExportPeriod = (req) => {
   const { from, to } = req.query;
   if (from && to) {
@@ -38,7 +37,6 @@ const getExportPeriod = (req) => {
   return { startDate, endDate };
 };
 
-// ---------- Scenario A: koi employee filter nahi — sab employees ka summary ----------
 const fetchAllEmployeesSummary = async (req) => {
   const { startDate, endDate } = getExportPeriod(req);
 
@@ -73,18 +71,17 @@ const employeeSummaryColumns = [
 ];
 
 const employeeSummaryTotals = (records) => ({
-  monthlySalary:   records.reduce((sum, r) => sum + (r.monthlySalary || 0), 0),
-  totalExpense:    records.reduce((sum, r) => sum + (r.totalExpense || 0), 0),
+  monthlySalary: records.reduce((sum, r) => sum + (r.monthlySalary || 0), 0),
+  totalExpense: records.reduce((sum, r) => sum + (r.totalExpense || 0), 0),
   remainingSalary: records.reduce((sum, r) => sum + (r.remainingSalary || 0), 0),
 });
 
 const employeeSummaryTotalsConfig = [
-  { label: "TOTAL Salary",    field: "monthlySalary",   prefix: "Rs. " },
-  { label: "TOTAL Expense",   field: "totalExpense",    prefix: "Rs. " },
+  { label: "TOTAL Salary", field: "monthlySalary", prefix: "Rs. " },
+  { label: "TOTAL Expense", field: "totalExpense", prefix: "Rs. " },
   { label: "TOTAL Remaining", field: "remainingSalary", prefix: "Rs. " },
 ];
 
-// ---------- Scenario B: specific employee — uski saari records is period ki ----------
 const fetchSingleEmployeeExpenseRecords = async (req) => {
   const { startDate, endDate } = getExportPeriod(req);
 
@@ -100,10 +97,9 @@ const fetchSingleEmployeeExpenseRecords = async (req) => {
 };
 
 const employeeExpenseDetailColumns = [
-  { header: "Date",      key: "date",      width: 55, getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
-  { header: "Amount",    key: "amount",    width: 50, getValue: (r) => r.amount ?? 0 },
-  { header: "Notes",     key: "notes",     width: 80, getValue: (r) => r.notes || "", wrap: true },
-  { header: "Added By",  key: "createdBy", width: 50, getValue: (r) => r.createdBy?.username || "" },
+  { header: "Date", key: "date", width: 55, getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Amount", key: "amount", width: 50, getValue: (r) => r.amount ?? 0 },
+  { header: "Notes", key: "notes", width: 80, getValue: (r) => r.notes || "", wrap: true },
 ];
 
 const employeeExpenseDetailTotals = (records) => {
@@ -117,33 +113,116 @@ const employeeExpenseDetailTotals = (records) => {
 };
 
 const employeeExpenseDetailTotalsConfig = [
-  { label: "Monthly Salary",  field: "monthlySalary",   prefix: "Rs. " },
-  { label: "Total Expense",   field: "totalExpense",    prefix: "Rs. " },
+  { label: "Monthly Salary", field: "monthlySalary", prefix: "Rs. " },
+  { label: "Total Expense", field: "totalExpense", prefix: "Rs. " },
   { label: "Remaining Salary", field: "remainingSalary", prefix: "Rs. " },
 ];
 
-// ---------- Final export controllers (dono scenario yahan decide) ----------
+const fetchSelectedExpenseRecords = async (req) => {
+  const { ids = [] } = req.body || {};
+
+  return EmployeeExpense.find({ _id: { $in: ids } })
+    .populate([
+      { path: "createdBy", select: "username" },
+      { path: "employee", select: "name phoneNumber monthlySalary" },
+    ])
+    .sort({ date: -1 });
+};
+
+const selectedExpenseTotals = (records) => {
+  const uniqueEmployees = [...new Set(records.map((r) => r.employee?._id?.toString()))];
+  const totalExpense = records.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+  if (uniqueEmployees.length === 1) {
+    const monthlySalary = records[0]?.employee?.monthlySalary || 0;
+    return {
+      monthlySalary,
+      totalExpense,
+      remainingSalary: monthlySalary - totalExpense,
+    };
+  }
+
+  return { totalExpense };
+};
+
+const selectedExpenseTotalsConfig = (records) => {
+  const uniqueEmployees = [...new Set(records.map((r) => r.employee?._id?.toString()))];
+  const base = [{ label: "TOTAL Expense", field: "totalExpense", prefix: "Rs. " }];
+  if (uniqueEmployees.length === 1) {
+    base.unshift({ label: "Monthly Salary", field: "monthlySalary", prefix: "Rs. " });
+    base.push({ label: "Remaining Salary", field: "remainingSalary", prefix: "Rs. " });
+  }
+  return base;
+};
+
 exports.exportEmployeeExpenseExcel = catchAsync(async (req, res, next) => {
-  const isSingleEmployee = !!req.query.employee;
+  const hasSelectedIds = Array.isArray(req.body?.ids) && req.body.ids.length > 0;
+  const isSingleEmployee = !hasSelectedIds && !!req.query.employee;
+
+  if (hasSelectedIds) {
+    return handlerFactory.exportExcel(EmployeeExpense, {
+      fetchRecords: fetchSelectedExpenseRecords,
+      getTotals: selectedExpenseTotals,
+      columns: employeeExpenseDetailColumns,
+      totalsConfig: selectedExpenseTotalsConfig,
+      sheetName: "Expense Records",
+    })(req, res, next);
+  }
+
+  if (isSingleEmployee) {
+    const emp = await Employee.findById(req.query.employee).select("name");
+    const employeeName = emp?.name || "Employee";
+    return handlerFactory.exportExcel(EmployeeExpense, {
+      fetchRecords: fetchSingleEmployeeExpenseRecords,
+      getTotals: employeeExpenseDetailTotals,
+      columns: employeeExpenseDetailColumns,
+      totalsConfig: employeeExpenseDetailTotalsConfig,
+      sheetName: `${employeeName} - Expense Detail`,
+    })(req, res, next);
+  }
 
   return handlerFactory.exportExcel(EmployeeExpense, {
-    fetchRecords: isSingleEmployee ? fetchSingleEmployeeExpenseRecords : fetchAllEmployeesSummary,
-    getTotals: isSingleEmployee ? employeeExpenseDetailTotals : employeeSummaryTotals,
-    columns: isSingleEmployee ? employeeExpenseDetailColumns : employeeSummaryColumns,
-    totalsConfig: isSingleEmployee ? employeeExpenseDetailTotalsConfig : employeeSummaryTotalsConfig,
-    sheetName: isSingleEmployee ? "Employee Expense Detail" : "All Employees Expense Summary",
+    fetchRecords: fetchAllEmployeesSummary,
+    getTotals: employeeSummaryTotals,
+    columns: employeeSummaryColumns,
+    totalsConfig: employeeSummaryTotalsConfig,
+    sheetName: "All Employees Expense Summary",
   })(req, res, next);
 });
 
 exports.exportEmployeeExpensePdf = catchAsync(async (req, res, next) => {
-  const isSingleEmployee = !!req.query.employee;
+  const hasSelectedIds = Array.isArray(req.body?.ids) && req.body.ids.length > 0;
+  const isSingleEmployee = !hasSelectedIds && !!req.query.employee;
+
+  if (hasSelectedIds) {
+    
+    return handlerFactory.exportPdf(EmployeeExpense, {
+      fetchRecords: fetchSelectedExpenseRecords,
+      getTotals: selectedExpenseTotals,
+      columns: employeeExpenseDetailColumns,
+      totalsConfig: selectedExpenseTotalsConfig,
+      title: ` Expense Detail`,
+    })(req, res, next);
+  }
+
+  if (isSingleEmployee) {
+    const emp = await Employee.findById(req.query.employee).select("name");
+    const employeeName = emp?.name || "Employee";
+    return handlerFactory.exportPdf(EmployeeExpense, {
+      fetchRecords: fetchSingleEmployeeExpenseRecords,
+      getTotals: employeeExpenseDetailTotals,
+      columns: employeeExpenseDetailColumns,
+      totalsConfig: employeeExpenseDetailTotalsConfig,
+      title: `${employeeName} - Expense Detail`,
+    })(req, res, next);
+  }
 
   return handlerFactory.exportPdf(EmployeeExpense, {
-    fetchRecords: isSingleEmployee ? fetchSingleEmployeeExpenseRecords : fetchAllEmployeesSummary,
-    getTotals: isSingleEmployee ? employeeExpenseDetailTotals : employeeSummaryTotals,
-    columns: isSingleEmployee ? employeeExpenseDetailColumns : employeeSummaryColumns,
-    totalsConfig: isSingleEmployee ? employeeExpenseDetailTotalsConfig : employeeSummaryTotalsConfig,
-    title: isSingleEmployee ? "Employee Expense Detail" : "All Employees Expense Summary",
+    fetchRecords: fetchAllEmployeesSummary,
+    getTotals: employeeSummaryTotals,
+    columns: employeeSummaryColumns,
+    totalsConfig: employeeSummaryTotalsConfig,
+    title: "All Employees Expense Summary",
   })(req, res, next);
 });
 
@@ -345,17 +424,52 @@ exports.getAllEmployeeExpense = catchAsync(async (req, res, next) => {
 
   handlerFactory.getAll(EmployeeExpense, populateOptions, logger, query, "date")(req, res, next);
 });
-exports.updateEmployeeExpense = catchAsync(async(req,res, next)=>{
-
-    const { value: validData, error } = POSTJoiEmployeeExpenseSchema.validate(req.body);
+exports.updateEmployeeExpense = catchAsync(async (req, res, next) => {
+  const { value: validData, error } = POSTJoiEmployeeExpenseSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400));
   }
 
+  const existingExpense = await EmployeeExpense.findById(req.params.id);
+  if (!existingExpense) {
+    return next(new AppError("Expense record not found.", 404));
+  }
+
+  const employee = await Employee.findById(existingExpense.employee).select("monthlySalary name");
+  if (!employee) {
+    return next(new AppError("Employee not found.", 404));
+  }
+
+  const expenseDate = new Date(validData.date || existingExpense.date);
+  const monthStart = new Date(Date.UTC(expenseDate.getUTCFullYear(), expenseDate.getUTCMonth(), 1, 0, 0, 0, 0));
+  const monthEnd = new Date(Date.UTC(expenseDate.getUTCFullYear(), expenseDate.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+
+  const existingAgg = await EmployeeExpense.aggregate([
+    {
+      $match: {
+        employee: employee._id,
+        date: { $gte: monthStart, $lte: monthEnd },
+        _id: { $ne: existingExpense._id },
+      },
+    },
+    { $group: { _id: null, total: { $sum: "$amount" } } },
+  ]);
+
+  const alreadySpent = existingAgg[0]?.total || 0;
+  const remaining = employee.monthlySalary - alreadySpent;
+
+  if (validData.amount > remaining) {
+    return next(
+      new AppError(
+        `Expense exceeds remaining salary. Remaining for this month: ${remaining}, Requested: ${validData.amount}.`,
+        400
+      )
+    );
+  }
+
   req.body = validData;
   handlerFactory.updateOne(EmployeeExpense, logger)(req, res, next);
-
-})
+});
 
 exports.deleteEmployeeExpense = handlerFactory.removeFromDb(EmployeeExpense, logger);
 

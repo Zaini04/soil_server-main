@@ -71,6 +71,11 @@ const mongoose = require('mongoose');
       ? { $in: queryObj.employee }
       : queryObj.employee;
 }
+      if (queryObj.labour) {
+    queryStr.labour = Array.isArray(queryObj.labour)
+      ? { $in: queryObj.labour }
+      : queryObj.labour;
+}
 
         if(queryObj.siteName){
             queryStr.siteName = queryObj.siteName

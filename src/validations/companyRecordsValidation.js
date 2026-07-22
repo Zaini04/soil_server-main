@@ -62,8 +62,21 @@ const GETJoiCompanyRecordsSchema = Joi.object({
 
 const entryCompanyRecordsSchema = POSTJoiCompanyRecordsSchema;
 
+const PATCHJoiCompanyRecordsSchema = Joi.object({
+  date: Joi.date().optional(),
+  client: Joi.string().regex(objectIdRegEx).optional(),
+  site: Joi.string().regex(objectIdRegEx).optional(),
+  vehicle: Joi.string().regex(objectIdRegEx).optional(),
+  materialType: Joi.string().optional(),
+  biltyNo: Joi.string().optional(),
+  rate: Joi.number().min(0).optional(),
+  totalSft: Joi.number().min(0).optional(),
+  totalRate: Joi.number().min(0).optional(),
+});
+
 module.exports = {
   POSTJoiCompanyRecordsSchema,
   GETJoiCompanyRecordsSchema,
-  entryCompanyRecordsSchema
+  entryCompanyRecordsSchema,
+  PATCHJoiCompanyRecordsSchema
 };

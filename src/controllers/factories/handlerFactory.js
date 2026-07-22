@@ -168,7 +168,7 @@ exports.updateOne = (Model, logger, options = {}) => catchAsync(async (req, res,
     }
 
     
-    Object.assign(doc, req.body, { updatedBy: req.user._id });
+    Object.assign(doc, req.body, {createdBy:req.user._id, updatedBy: req.user._id });
 
     const updatedDoc = await doc.save();
 
@@ -315,14 +315,16 @@ const computeTotals = (records, totalsConfig = []) => {
 
 exports.exportExcel = (Model, options) =>
   catchAsync(async (req, res) => {
-    const { columns = [], totalsConfig = [], sheetName = "Records" } = options;
+    const { columns = [], sheetName = "Records" } = options;
 
-// Custom fetch agar diya ho, warna purana default
     const records = options.fetchRecords
       ? await options.fetchRecords(req)
       : await fetchExportRecords(Model, options, req);
 
-    // Custom totals agar diya ho, warna purana default
+    const totalsConfig = typeof options.totalsConfig === "function"
+      ? options.totalsConfig(records)
+      : (options.totalsConfig || []);
+
     const totals = options.getTotals
       ? await options.getTotals(records, req)
       : computeTotals(records, totalsConfig);
@@ -373,19 +375,19 @@ exports.exportExcel = (Model, options) =>
 
 exports.exportPdf = (Model, options) =>
   catchAsync(async (req, res) => {
-    const {
-      columns = [],        
-      totalsConfig = [],   
-      title: getTitle,     
-    } = options;
+    const { columns = [], title: getTitle } = options;
 
-   const records = options.fetchRecords
+    const records = options.fetchRecords
       ? await options.fetchRecords(req)
       : await fetchExportRecords(Model, options, req);
 
     if (!records.length) {
       return res.status(404).json({ success: false, message: "No records found" });
     }
+
+    const totalsConfig = typeof options.totalsConfig === "function"
+      ? options.totalsConfig(records)
+      : (options.totalsConfig || []);
 
     const totals = options.getTotals
       ? await options.getTotals(records, req)
@@ -527,7 +529,7 @@ exports.exportPdf = (Model, options) =>
 
     if (totalsConfig.length > 0) {
       y += 15;
-      const TOTAL_H =60 ;
+      const TOTAL_H = 60;
       if (y + TOTAL_H > doc.page.height - 30) {
         doc.addPage();
         y = 30;
