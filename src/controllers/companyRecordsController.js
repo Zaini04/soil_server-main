@@ -9,6 +9,8 @@ const logger = require("../logger")("CompanyRecords_CONTROLLER");
 const handlerFactory = require('./factories/handlerFactory');
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
+const path = require("path");
+const LOGO_PATH = path.join(__dirname, "../assets/header.png");
 
 exports.enterComanyRecords = catchAsync(async (req, res, next) => {
 
@@ -306,6 +308,7 @@ exports.exportCompanyExpensePdf = catchAsync(async (req, res, next) => {
       columns: companyExpenseDetailColumns,
       totalsConfig: companyExpenseDetailTotalsConfig,
       title: `${clientName} - Company Records`,
+      toLabel:clientName
     })(req, res, next);
   }
 
@@ -376,7 +379,9 @@ exports.exportCompanyRecordsExcel = catchAsync(async (req, res) => {
       },
     }).select("_id");
 
-    req.query.site = sites.map((s) => s._id);
+    query.site = { $in: sites.map((s) => s._id) };
+
+    delete req.query.site;
   }
 
   const features = new APIFeatures(
@@ -410,7 +415,6 @@ exports.exportCompanyRecordsExcel = catchAsync(async (req, res) => {
   worksheet.columns = [
     { header: "Date", key: "date", width: 18 },
     { header: "Bilty No", key: "biltyNo", width: 20 },
-    { header: "Client", key: "client", width: 25 },
     { header: "Site", key: "site", width: 25 },
     { header: "Vehicle", key: "vehicle", width: 20 },
     { header: "Material Type", key: "materialType", width: 20 },
@@ -425,7 +429,6 @@ exports.exportCompanyRecordsExcel = catchAsync(async (req, res) => {
     worksheet.addRow({
       date: record.date?.toLocaleDateString("en-GB"),
       biltyNo: record.biltyNo,
-      client: record.client?.name,
       site: record.site?.siteName,
       vehicle: record.vehicle?.vehicleNo,
       materialType: record.materialType,
@@ -473,7 +476,10 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     const sites = await Site.find({
       siteName: { $regex: req.query.site, $options: "i" },
     }).select("_id");
+
     query.site = { $in: sites.map((s) => s._id) };
+
+    delete req.query.site;
   }
 
   const features = new APIFeatures(
@@ -512,20 +518,20 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
   );
   doc.pipe(res);
 
-  const pageLeft = 30;
-  const pageRight = doc.page.width - 30;
+  const pageLeft = 25;
+  const pageRight = doc.page.width - 25;
   const tableWidth = pageRight - pageLeft; // 555
 
   const cols = {
     sr:       { x: pageLeft,       w: 30  },
-    date:     { x: pageLeft + 20,  w: 65  },
-    bilty:    { x: pageLeft + 85,  w: 50  },
-    site:     { x: pageLeft + 135, w: 80  },
-    vehicle:  { x: pageLeft + 215, w: 60  },
-    material: { x: pageLeft + 275, w: 70  },
-    rate:     { x: pageLeft + 345, w: 50  },
-    sft:      { x: pageLeft + 395, w: 50  },
-    total:    { x: pageLeft + 445, w: 110 },
+    date:     { x: pageLeft + 20,  w: 70  },
+    bilty:    { x: pageLeft + 90,  w: 60  },
+    site:     { x: pageLeft + 150, w: 80  },
+    vehicle:  { x: pageLeft + 245, w: 70  },
+    material: { x: pageLeft + 315, w: 80  },
+    rate:     { x: pageLeft + 395, w: 55  },
+    sft:      { x: pageLeft + 450, w: 55  },
+    total:    { x: pageLeft + 505, w: 70  },
   };
 
   const PADDING = { top: 5, bottom: 5, left: 4 };
@@ -595,7 +601,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     const textY = y + PADDING.top;
 
     doc.text(String(index + 1), cols.sr.x + PADDING.left, textY, {
-      width: cols.sr.w - PADDING.left * 2,
+      width: cols.sr.w ,
       lineBreak: false,
     });
 
@@ -603,45 +609,45 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       new Date(record.date).toLocaleDateString("en-GB"),
       cols.date.x + PADDING.left,
       textY,
-      { width: cols.date.w - PADDING.left * 2, lineBreak: false }
+      { width: cols.date.w , lineBreak: false }
     );
 
     doc.text(record.biltyNo || "", cols.bilty.x + PADDING.left, textY, {
-      width: cols.bilty.w - PADDING.left * 2,
+      width: cols.bilty.w ,
       lineBreak: false,
     });
 
     doc.text(record.site?.siteName || "", cols.site.x + PADDING.left, textY, {
-      width: cols.site.w - PADDING.left * 2,
+      width: cols.site.w ,
     });
 
     doc.text(record.vehicle?.vehicleNo || "", cols.vehicle.x + PADDING.left, textY, {
-      width: cols.vehicle.w - PADDING.left * 2,
+      width: cols.vehicle.w,
     });
 
     doc.text(record.materialType || "", cols.material.x + PADDING.left, textY, {
-      width: cols.material.w - PADDING.left * 2,
+      width: cols.material.w ,
     });
 
     doc.text(
       record.rate?.toLocaleString() || "0",
       cols.rate.x + PADDING.left,
       textY,
-      { width: cols.rate.w - PADDING.left * 2, lineBreak: false }
+      { width: cols.rate.w, lineBreak: false }
     );
 
     doc.text(
       record.totalSft?.toLocaleString() || "0",
       cols.sft.x + PADDING.left,
       textY,
-      { width: cols.sft.w - PADDING.left * 2, lineBreak: false }
+      { width: cols.sft.w, lineBreak: false }
     );
 
     doc.text(
       record.totalRate?.toLocaleString() || "0",
       cols.total.x + PADDING.left,
       textY,
-      { width: cols.total.w - PADDING.left * 2, lineBreak: false }
+      { width: cols.total.w , lineBreak: false }
     );
 
     doc.strokeColor("#cccccc").lineWidth(0.5);
@@ -654,19 +660,41 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
 
 
   const headerY = 30;
-  const headerHeight = 60;
+  let headerHeight = 60;
 
-  doc.rect(pageLeft, headerY, tableWidth, headerHeight).fill("#000000");
+  try {
+    const imgDims = doc.openImage(LOGO_PATH);
+    headerHeight = tableWidth * (imgDims.height / imgDims.width);
 
-  const titleTextHeight = doc.heightOfString(clientName, { width: tableWidth });
-  doc
-    .fillColor("#ffffff")
-    .font("Helvetica-Bold")
-    .fontSize(20)
-    .text(clientName, pageLeft, headerY + (headerHeight - titleTextHeight) / 2, {
+    doc.image(LOGO_PATH, pageLeft, headerY, {
       width: tableWidth,
-      align: "center",
+      height: headerHeight,
     });
+  } catch (e) {
+    console.error("Logo image failed to load:", e.message);
+    headerHeight = 60;
+    doc.rect(pageLeft, headerY, tableWidth, headerHeight).fill("#000000");
+    const titleTextHeight = doc.heightOfString(clientName, { width: tableWidth });
+    doc
+      .fillColor("#ffffff")
+      .font("Helvetica-Bold")
+      .fontSize(20)
+      .text(clientName, pageLeft, headerY + (headerHeight - titleTextHeight) / 2, {
+        width: tableWidth,
+        align: "center",
+      });
+  }
+
+  doc
+    .fillColor("#000000")
+    .font("Helvetica")
+    .fontSize(9)
+    .text(
+      `To: ${clientName}`,
+      pageLeft,
+      headerY + headerHeight + 4,
+      { width: tableWidth / 2, align: "left" }
+    );
 
   doc
     .fillColor("#000000")
@@ -675,11 +703,11 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     .text(
       `Date: ${new Date().toLocaleDateString("en-GB")}`,
       pageLeft,
-      headerY + headerHeight + 8,
+      headerY + headerHeight + 4,
       { width: tableWidth, align: "right" }
     );
 
-  let y = headerY + headerHeight + 28;
+  let y = headerY + headerHeight + 20;
   y = drawTableHeader(y);
 
   doc.font("Helvetica").fontSize(FONT_SIZE);

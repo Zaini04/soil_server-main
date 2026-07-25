@@ -98,6 +98,7 @@ const fetchSingleEmployeeExpenseRecords = async (req) => {
 
 const employeeExpenseDetailColumns = [
   { header: "Date", key: "date", width: 55, getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+  { header: "Employee", key: "employee", width: 55, getValue: (r) => r.employee?.name || ""},
   { header: "Amount", key: "amount", width: 50, getValue: (r) => r.amount ?? 0 },
   { header: "Notes", key: "notes", width: 80, getValue: (r) => r.notes || "", wrap: true },
 ];
@@ -214,6 +215,7 @@ exports.exportEmployeeExpensePdf = catchAsync(async (req, res, next) => {
       columns: employeeExpenseDetailColumns,
       totalsConfig: employeeExpenseDetailTotalsConfig,
       title: `${employeeName} - Expense Detail`,
+      toLabel:employeeName
     })(req, res, next);
   }
 

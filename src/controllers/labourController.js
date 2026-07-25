@@ -307,6 +307,7 @@ const fetchSingleLabourExpenseRecords = async (req) => {
 
 const labourExpenseDetailColumns = [
     { header: "Date", key: "date", width: 55, getValue: (r) => new Date(r.date).toLocaleDateString("en-GB") },
+    { header: "Labour", key: "labour", width: 50, getValue: (r) => r.labour?.name ?? 0 },
     { header: "Amount", key: "amount", width: 50, getValue: (r) => r.amount ?? 0 },
     { header: "Notes", key: "notes", width: 80, getValue: (r) => r.notes || "", wrap: true },
 ];
@@ -396,6 +397,8 @@ exports.exportLabourExpensePdf = catchAsync(async (req, res, next) => {
             columns: labourExpenseDetailColumns,
             totalsConfig: labourExpenseDetailTotalsConfig,
             title: `${labourName} - Expense Detail`,
+            toLabel:labourName
+
         })(req, res, next);
     }
 

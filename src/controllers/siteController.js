@@ -111,7 +111,7 @@ exports.getSitesWithMaterialByClient = catchAsync(async (req, res, next) => {
     const sites = await Site.find({ 
       client: id, 
       status: "Active" 
-    }).select("siteName  materialsRates "); 
+    }).select("siteName  materialsRates address "); 
 
     if (!sites || sites.length === 0) {
       return res.status(404).json({
@@ -145,7 +145,7 @@ exports.getSitesByClient = catchAsync(async (req, res, next) => {
 exports.getSitesDropdownList = async (req, res, next) => {
   try {
     const sites = await Site.find({ status: "Active" }) 
-      .select("_id siteName")
+      .select("_id siteName address")
       .lean();
 
   

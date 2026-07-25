@@ -1,179 +1,196 @@
 class APIFeatures {
   constructor(query, queryStr, dateField = "createdAt") {
-  this.query = query;
-  this.queryStr = queryStr;
-  this.dateField = dateField;
-}
-
-    filter() {
-        let queryObj = { ...this.queryStr };
-        const excludeFields = ['sort', 'limit', 'page', 'fields','clientName','searchdate'];
-        excludeFields.forEach((el) => delete queryObj[el]);
-    
-        let queryStr = {};
-    
-        if(queryObj.fuelLiters){
-            queryStr.fuelLiters = queryObj.fuelLiters
-        }
-        if(queryObj.expenseType){
-            queryStr.expenseType = queryObj.expenseType
-        }
-         if (queryObj.vehicle) {
-    queryStr.vehicle = Array.isArray(queryObj.vehicle)
-      ? { $in: queryObj.vehicle }
-      : queryObj.vehicle;
+    this.query = query;
+    this.queryStr = queryStr;
+    this.dateField = dateField;
   }
 
-if (queryObj.client ) {
-queryStr.client = Array.isArray(queryObj.client)
-      ? { $in: queryObj.client }
-      : queryObj.client;
-}
+  filter() {
+    let queryObj = { ...this.queryStr };
+    const excludeFields = [
+      "sort",
+      "limit",
+      "page",
+      "fields",
+      "clientName",
+      "searchdate",
+    ];
+    excludeFields.forEach((el) => delete queryObj[el]);
 
- 
-        if(queryObj.fuelCompany){
+    let queryStr = {};
 
- queryStr.fuelCompany = Array.isArray(queryObj.fuelCompany)
-    ? { $in: queryObj.fuelCompany }
-    : queryObj.fuelCompany;        }
+    if (queryObj.fuelLiters) {
+      queryStr.fuelLiters = queryObj.fuelLiters;
+    }
+    if (queryObj.expenseType) {
+      queryStr.expenseType = queryObj.expenseType;
+    }
+    if (queryObj.vehicle) {
+      queryStr.vehicle = Array.isArray(queryObj.vehicle)
+        ? { $in: queryObj.vehicle }
+        : queryObj.vehicle;
+    }
 
- if(queryObj.site){
+    if (queryObj.client) {
+      queryStr.client = Array.isArray(queryObj.client)
+        ? { $in: queryObj.client }
+        : queryObj.client;
+    }
+    // if (queryObj.siteName) {
+    //   queryStr.siteName = Array.isArray(queryObj.siteName)
+    //     ? { $in: queryObj.siteName }
+    //     : queryObj.siteName;
+    // }
 
- queryStr.site = Array.isArray(queryObj.site)
-    ? { $in: queryObj.site }
-    : queryObj.site;        }
+    if (queryObj.fuelCompany) {
+      queryStr.fuelCompany = Array.isArray(queryObj.fuelCompany)
+        ? { $in: queryObj.fuelCompany }
+        : queryObj.fuelCompany;
+    }
 
-        if (queryObj.status) {
-            queryStr.status = queryObj.status;
-        }
-        if(queryObj.ownerName){
-            queryStr.ownerName = queryObj.ownerName
-        }
-        if(queryObj.vehicleNo){
-            queryStr.vehicleNo=queryObj.vehicleNo
-        }
-        
-        if(queryObj.name){
-const mongoose = require('mongoose');
-    
-    // Check karein agar bheji gayi cheez 24-character ki valid MongoDB ObjectId hai
-    if (mongoose.Types.ObjectId.isValid(queryObj.name)) {
+    if (queryObj.site) {
+      queryStr.site = Array.isArray(queryObj.site)
+        ? { $in: queryObj.site }
+        : queryObj.site;
+    }
+
+    if (queryObj.status) {
+      queryStr.status = queryObj.status;
+    }
+    if (queryObj.ownerName) {
+      queryStr.ownerName = queryObj.ownerName;
+    }
+    if (queryObj.vehicleNo) {
+      queryStr.vehicleNo = queryObj.vehicleNo;
+    }
+
+    if (queryObj.name) {
+      const mongoose = require("mongoose");
+
+      // Check karein agar bheji gayi cheez 24-character ki valid MongoDB ObjectId hai
+      if (mongoose.Types.ObjectId.isValid(queryObj.name)) {
         queryStr._id = queryObj.name; // Agar ID hai to _id field par query lagayein
-    } else {
-        queryStr.name = { $regex: queryObj.name, $options: 'i' }; // Agar normal name hai to regex chalayein
-    }            
-        }
-        if (queryObj._id) {
-    queryStr._id = queryObj._id;
-}
-      if (queryObj.employee) {
-    queryStr.employee = Array.isArray(queryObj.employee)
-      ? { $in: queryObj.employee }
-      : queryObj.employee;
-}
-      if (queryObj.labour) {
-    queryStr.labour = Array.isArray(queryObj.labour)
-      ? { $in: queryObj.labour }
-      : queryObj.labour;
+      } else {
+        queryStr.name = { $regex: queryObj.name, $options: "i" }; // Agar normal name hai to regex chalayein
+      }
+    }
+    if (queryObj._id) {
+      queryStr._id = queryObj._id;
+    }
+    if (queryObj.employee) {
+      queryStr.employee = Array.isArray(queryObj.employee)
+        ? { $in: queryObj.employee }
+        : queryObj.employee;
+    }
+    if (queryObj.labour) {
+      queryStr.labour = Array.isArray(queryObj.labour)
+        ? { $in: queryObj.labour }
+        : queryObj.labour;
+    }
+
+    if (queryObj.siteName) {
+  const mongoose = require("mongoose");
+
+  if (mongoose.Types.ObjectId.isValid(queryObj.siteName)) {
+    queryStr._id = queryObj.siteName;
+  } else {
+    queryStr.siteName = Array.isArray(queryObj.siteName)
+      ? { $in: queryObj.siteName }
+      : { $regex: queryObj.siteName, $options: "i" };
+  }
 }
 
-        if(queryObj.siteName){
-            queryStr.siteName = queryObj.siteName
-        }
+    if (queryObj.autoIncrementId !== undefined) {
+      queryStr.autoIncrementId = queryObj.autoIncrementId;
+    }
 
-        if (queryObj.autoIncrementId !== undefined) {
-            queryStr.autoIncrementId = queryObj.autoIncrementId;
-        }
-
-if (queryObj.from || queryObj.to) {
-queryStr[this.dateField] = {};    
-    if (queryObj.from) {
+    if (queryObj.from || queryObj.to) {
+      queryStr[this.dateField] = {};
+      if (queryObj.from) {
         const startDate = new Date(queryObj.from);
         startDate.setUTCHours(0, 0, 0, 0);
         queryStr[this.dateField].$gte = startDate;
-    }
-    
-    if (queryObj.to) {
+      }
+
+      if (queryObj.to) {
         const endDate = new Date(queryObj.to);
         endDate.setUTCHours(23, 59, 59, 999);
         queryStr[this.dateField].$lte = endDate;
-    }
-}else if (queryObj.date) {
-    const startOfDay = new Date(queryObj.date);
-    startOfDay.setUTCHours(0, 0, 0, 0);
+      }
+    } else if (queryObj.date) {
+      const startOfDay = new Date(queryObj.date);
+      startOfDay.setUTCHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(queryObj.date);
-    endOfDay.setUTCHours(23, 59, 59, 999);
+      const endOfDay = new Date(queryObj.date);
+      endOfDay.setUTCHours(23, 59, 59, 999);
 
-    queryStr.createdAt = {
+      queryStr.createdAt = {
         $gte: startOfDay,
-        $lte: endOfDay
-    };
-}
-    
-        if (queryObj.keyword) {
-            const keywordQuery = {
-                $or: [
-                    { name: { $regex: queryObj.keyword , $options: 'i' } },
-                    { title: { $regex: queryObj.keyword , $options: 'i' } },
-                    { username : { $regex: queryObj.keyword , $options: 'i' } },
-                    { email : { $regex: queryObj.keyword , $options: 'i' } },
-                    { cnic : { $regex: queryObj.keyword , $options: 'i' } },
-                    { phone : { $regex: queryObj.keyword , $options: 'i' } },
-                    { phoneNumber : { $regex: queryObj.keyword , $options: 'i' } },
-                    { phoneNumber2 : { $regex: queryObj.keyword , $options: 'i' } },
-                    { whatsappNumber : { $regex: queryObj.keyword , $options: 'i' } },
-                    { whatsappNumber2 : { $regex: queryObj.keyword , $options: 'i' } },
-                    { city : { $regex: queryObj.keyword , $options: 'i' } },
-                    { province : { $regex: queryObj.keyword , $options: 'i' } },
-                    { number : { $regex: queryObj.keyword , $options: 'i' } },
-                    { fullNumber : { $regex: queryObj.keyword , $options: 'i' } },
-                ],
-            };
-            queryStr = { ...queryStr, ...keywordQuery };
-        }
-    
-    
-        this.query = this.query.find(queryStr);
-        this.queryObj = { ...queryStr };
-        return this;
+        $lte: endOfDay,
+      };
     }
 
-    sort() {
-        if (this.queryStr.sort) {
-            const [field, order] = this.queryStr.sort.split(':');
-            const sortOrder = order === 'asc' ? 1 : -1;
-            this.query = this.query.sort({ [field]: sortOrder });
-        } else if (this.queryStr.sortBy) {
-            const [field, order] = this.queryStr.sortBy.split('_');
-            const sortOrder = order === 'ascending' || order === 'asc' ? 1 : -1;
-            this.query = this.query.sort({ [field]: sortOrder });
-        } else {
-            this.query = this.query.sort({ createdAt: -1 });
-        }
-        return this;
+    if (queryObj.keyword) {
+      const keywordQuery = {
+        $or: [
+          { name: { $regex: queryObj.keyword, $options: "i" } },
+          { title: { $regex: queryObj.keyword, $options: "i" } },
+          { username: { $regex: queryObj.keyword, $options: "i" } },
+          { email: { $regex: queryObj.keyword, $options: "i" } },
+          { cnic: { $regex: queryObj.keyword, $options: "i" } },
+          { phone: { $regex: queryObj.keyword, $options: "i" } },
+          { phoneNumber: { $regex: queryObj.keyword, $options: "i" } },
+          { phoneNumber2: { $regex: queryObj.keyword, $options: "i" } },
+          { whatsappNumber: { $regex: queryObj.keyword, $options: "i" } },
+          { whatsappNumber2: { $regex: queryObj.keyword, $options: "i" } },
+          { city: { $regex: queryObj.keyword, $options: "i" } },
+          { province: { $regex: queryObj.keyword, $options: "i" } },
+          { number: { $regex: queryObj.keyword, $options: "i" } },
+          { fullNumber: { $regex: queryObj.keyword, $options: "i" } },
+        ],
+      };
+      queryStr = { ...queryStr, ...keywordQuery };
     }
 
-    limitFields () {
-        if(this.queryStr.fields){
-            let fields = this.queryStr.fields.split(",").join(" ");
-            this.query = this.query.select(fields)
-        }else{
-            this.query = this.query.select('-__v -password')
-        }
-        return this;
-    }
+    this.query = this.query.find(queryStr);
+    this.queryObj = { ...queryStr };
+    return this;
+  }
 
-    paginate () {
-        const page = this.queryStr.page * 1 || 1;
-        const pageSize  = this.queryStr.pageSize * 1 || 10;
-        const skip = (page - 1) * pageSize;
-        this.query.skip(skip).limit(pageSize)
-        this.pageSize = pageSize;
-        this.page = page;
-        return this;
+  sort() {
+    if (this.queryStr.sort) {
+      const [field, order] = this.queryStr.sort.split(":");
+      const sortOrder = order === "asc" ? 1 : -1;
+      this.query = this.query.sort({ [field]: sortOrder });
+    } else if (this.queryStr.sortBy) {
+      const [field, order] = this.queryStr.sortBy.split("_");
+      const sortOrder = order === "ascending" || order === "asc" ? 1 : -1;
+      this.query = this.query.sort({ [field]: sortOrder });
+    } else {
+      this.query = this.query.sort({ createdAt: -1 });
     }
+    return this;
+  }
 
+  limitFields() {
+    if (this.queryStr.fields) {
+      let fields = this.queryStr.fields.split(",").join(" ");
+      this.query = this.query.select(fields);
+    } else {
+      this.query = this.query.select("-__v -password");
+    }
+    return this;
+  }
+
+  paginate() {
+    const page = this.queryStr.page * 1 || 1;
+    const pageSize = this.queryStr.pageSize * 1 || 10;
+    const skip = (page - 1) * pageSize;
+    this.query.skip(skip).limit(pageSize);
+    this.pageSize = pageSize;
+    this.page = page;
+    return this;
+  }
 }
 
 module.exports = APIFeatures;

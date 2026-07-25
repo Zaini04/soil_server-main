@@ -10,6 +10,9 @@ const FuelCompany = require('../../models/fuelCompany');
 const Site = require('../../models/siteModel');
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
+const path = require("path");
+
+const LOGO_PATH = path.join(__dirname, "../../assets/header.png");
 
 exports.createOne = (Model , docValidation = null , logger , options = {} ) => catchAsync(async(req , res , next) => {
     const { imageField = 'image', isSingleImage = true , imgDir } = options;
@@ -375,8 +378,8 @@ exports.exportExcel = (Model, options) =>
 
 exports.exportPdf = (Model, options) =>
   catchAsync(async (req, res) => {
-    const { columns = [], title: getTitle } = options;
-
+    const { columns = [], title: getTitle, toLabel } = options;
+    const logoPath = options.logoPath || LOGO_PATH;
     const records = options.fetchRecords
       ? await options.fetchRecords(req)
       : await fetchExportRecords(Model, options, req);
@@ -396,6 +399,10 @@ exports.exportPdf = (Model, options) =>
     const titleText = typeof getTitle === "function"
       ? getTitle(records)
       : getTitle || "Records";
+
+    const toText = typeof toLabel === "function"
+      ? toLabel(records)
+      : (toLabel || null);
 
     const doc = new PDFDocument({ margin: 30, size: "A4" });
     res.setHeader("Content-Type", "application/pdf");
@@ -449,6 +456,34 @@ exports.exportPdf = (Model, options) =>
       return y + HEADER_H;
     };
 
+    const drawCoverImage = (doc, imagePath, x, y, boxW, boxH) => {
+  const imgDims = doc.openImage(imagePath);
+  const imgW = imgDims.width;
+  const imgH = imgDims.height;
+
+  const boxRatio = boxW / boxH;
+  const imgRatio = imgW / imgH;
+
+  let drawW, drawH, drawX, drawY;
+
+  if (imgRatio > boxRatio) {
+    drawH = boxH;
+    drawW = boxH * imgRatio;
+    drawX = x - (drawW - boxW) / 2;
+    drawY = y;
+  } else {
+    drawW = boxW;
+    drawH = boxW / imgRatio;
+    drawX = x;
+    drawY = y - (drawH - boxH) / 2;
+  }
+
+  doc.save();
+  doc.rect(x, y, boxW, boxH).clip();
+  doc.image(imagePath, drawX, drawY, { width: drawW, height: drawH });
+  doc.restore();
+};
+
     const getRowHeight = (record) => {
       doc.font("Helvetica").fontSize(FONT_SIZE);
       let maxH = MIN_ROW_H;
@@ -490,8 +525,21 @@ exports.exportPdf = (Model, options) =>
       doc.rect(PAGE_LEFT, y, TABLE_WIDTH, rowH).stroke();
     };
 
-    const headerY = 30;
-    const headerH = 60;
+const headerY = 30;
+let headerH = 60;
+
+if (logoPath) {
+  try {
+    const imgDims = doc.openImage(logoPath);
+    headerH = TABLE_WIDTH * (imgDims.height / imgDims.width);
+
+    doc.image(logoPath, PAGE_LEFT, headerY, {
+      width: TABLE_WIDTH,
+      height: headerH,
+    });
+  } catch (e) {
+    console.error("Logo image failed to load:", e.message);
+    headerH = 60;
     doc.rect(PAGE_LEFT, headerY, TABLE_WIDTH, headerH).fill("#000000");
     const titleH = doc.heightOfString(titleText, { width: TABLE_WIDTH });
     doc
@@ -502,19 +550,45 @@ exports.exportPdf = (Model, options) =>
         width: TABLE_WIDTH,
         align: "center",
       });
-    doc
-      .fillColor("#000000")
-      .font("Helvetica")
-      .fontSize(9)
-      .text(
-        `Date: ${new Date().toLocaleDateString("en-GB")}`,
-        PAGE_LEFT,
-        headerY + headerH + 8,
-        { width: TABLE_WIDTH, align: "right" }
-      );
+  }
+} else {
+  headerH = 60;
+  doc.rect(PAGE_LEFT, headerY, TABLE_WIDTH, headerH).fill("#000000");
+  const titleH = doc.heightOfString(titleText, { width: TABLE_WIDTH });
+  doc
+    .fillColor("#ffffff")
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .text(titleText, PAGE_LEFT, headerY + (headerH - titleH) / 2, {
+      width: TABLE_WIDTH,
+      align: "center",
+    });
+}
 
-    let y = headerY + headerH + 28;
-    y = drawTableHeader(y);
+doc
+  .fillColor("#000000")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    toText ? `To: ${toText}` : "",
+    PAGE_LEFT,
+    headerY + headerH + 4,
+    { width: TABLE_WIDTH / 2, align: "left" }
+  );
+
+doc
+  .fillColor("#000000")
+  .font("Helvetica")
+  .fontSize(9)
+  .text(
+    `Date: ${new Date().toLocaleDateString("en-GB")}`,
+    PAGE_LEFT,
+    headerY + headerH + 4,
+    { width: TABLE_WIDTH, align: "right" }
+  );
+
+let y = headerY + headerH + 20;
+y = drawTableHeader(y); 
 
     records.forEach((record, index) => {
       const rowH = getRowHeight(record);
