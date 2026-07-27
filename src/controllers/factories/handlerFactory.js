@@ -12,7 +12,7 @@ const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 const path = require("path");
 
-const LOGO_PATH = path.join(__dirname, "../../assets/header.png");
+const LOGO_PATH = path.join(__dirname, "../../assets/headers.png");
 
 exports.createOne = (Model , docValidation = null , logger , options = {} ) => catchAsync(async(req , res , next) => {
     const { imageField = 'image', isSingleImage = true , imgDir } = options;
@@ -447,7 +447,7 @@ exports.exportPdf = (Model, options) =>
         });
       });
 
-      doc.strokeColor("#999999").lineWidth(0.5);
+doc.strokeColor("#000000").lineWidth(1);
       colDefs.forEach(({ x }) => {
         doc.moveTo(x, y).lineTo(x, y + HEADER_H).stroke();
       });
@@ -518,7 +518,7 @@ exports.exportPdf = (Model, options) =>
         });
       });
 
-      doc.strokeColor("#cccccc").lineWidth(0.5);
+doc.strokeColor("#000000").lineWidth(0.8);
       colDefs.forEach(({ x }) => {
         doc.moveTo(x, y).lineTo(x, y + rowH).stroke();
       });
@@ -567,23 +567,23 @@ if (logoPath) {
 
 doc
   .fillColor("#000000")
-  .font("Helvetica")
-  .fontSize(9)
+  .font("Helvetica-Bold")
+  .fontSize(13)
   .text(
     toText ? `To: ${toText}` : "",
     PAGE_LEFT,
-    headerY + headerH + 4,
+    headerY + headerH + 1,
     { width: TABLE_WIDTH / 2, align: "left" }
   );
 
 doc
   .fillColor("#000000")
-  .font("Helvetica")
-  .fontSize(9)
+  .font("Helvetica-Bold")
+  .fontSize(13)
   .text(
     `Date: ${new Date().toLocaleDateString("en-GB")}`,
     PAGE_LEFT,
-    headerY + headerH + 4,
+    headerY + headerH + 1,
     { width: TABLE_WIDTH, align: "right" }
   );
 

@@ -10,7 +10,7 @@ const handlerFactory = require('./factories/handlerFactory');
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 const path = require("path");
-const LOGO_PATH = path.join(__dirname, "../assets/header.png");
+const LOGO_PATH = path.join(__dirname, "../assets/headers.png");
 
 exports.enterComanyRecords = catchAsync(async (req, res, next) => {
 
