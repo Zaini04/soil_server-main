@@ -564,7 +564,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       });
     });
 
-    doc.strokeColor("#999999").lineWidth(0.5);
+    doc.strokeColor("#000000").lineWidth(1);
     Object.values(cols).slice(1).forEach(({ x }) => {
       doc.moveTo(x, y).lineTo(x, y + HEADER_HEIGHT).stroke();
     });
@@ -650,7 +650,7 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       { width: cols.total.w , lineBreak: false }
     );
 
-    doc.strokeColor("#cccccc").lineWidth(0.5);
+    doc.strokeColor("#000000").lineWidth(0.8);
     Object.values(cols).slice(1).forEach(({ x }) => {
       doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
     });
@@ -685,27 +685,27 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
       });
   }
 
-  doc
-    .fillColor("#000000")
-    .font("Helvetica")
-    .fontSize(9)
-    .text(
-      `To: ${clientName}`,
-      pageLeft,
-      headerY + headerHeight + 4,
-      { width: tableWidth / 2, align: "left" }
-    );
+ doc
+  .fillColor("#000000")
+  .font("Helvetica-Bold")
+  .fontSize(13)
+  .text(
+    toText ? `To: ${toText}` : "",
+    PAGE_LEFT,
+    headerY + headerH + 1,
+    { width: TABLE_WIDTH / 2, align: "left" }
+  );
 
-  doc
-    .fillColor("#000000")
-    .font("Helvetica")
-    .fontSize(9)
-    .text(
-      `Date: ${new Date().toLocaleDateString("en-GB")}`,
-      pageLeft,
-      headerY + headerHeight + 4,
-      { width: tableWidth, align: "right" }
-    );
+doc
+  .fillColor("#000000")
+  .font("Helvetica-Bold")
+  .fontSize(13)
+  .text(
+    `Date: ${new Date().toLocaleDateString("en-GB")}`,
+    PAGE_LEFT,
+    headerY + headerH + 1,
+    { width: TABLE_WIDTH, align: "right" }
+  );
 
   let y = headerY + headerHeight + 20;
   y = drawTableHeader(y);
