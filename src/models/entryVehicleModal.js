@@ -59,9 +59,14 @@ const vehicleEntrySchema = new mongoose.Schema(
     ref:'FuelCompany',
     required: [true,"FuelCompany is required"]
     },
+    dieselRate:{
+        type: Number,
+      required: [true, "Diesel Rate is required."],
+      default: 0,
+    },
     dieselCost: {
       type: Number,
-      required: [true, "Diesel expense is required."],
+      required: [true, "Diesel Cost is required."],
       default: 0,
     },
     dieselInLitters: {
@@ -160,6 +165,8 @@ const vehicleEntrySchema = new mongoose.Schema(
 );
 
 vehicleEntrySchema.pre("save", function (next) {
+
+  this.dieselCost = (this.dieselInLitters || 0) * (this.dieselRate || 0);
   this.totalRate = this.totalSftVehicles * this.rate;
 
   const totalExpenses =

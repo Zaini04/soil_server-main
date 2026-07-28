@@ -40,7 +40,8 @@ const POSTJoiEntryVehicleSchema = Joi.object({
   totalRate: Joi.number().min(0).optional(), 
   
   materialCost: Joi.number().min(0).default(0),
-  dieselCost: Joi.number().min(0).default(0),
+  dieselCost: Joi.number().optional(),
+  dieselRate: Joi.number().min(0).default(0),
   dieselInLitters: Joi.number().min(0).default(0),
   fuelCompany: Joi.string().trim().regex(objectIdRegEx).required().messages({
     "string.pattern.base": "Invalid Fuel Company Reference ID.",
@@ -90,7 +91,8 @@ const PATCHJoiEntryVehicleSchema = Joi.object({
   totalRate: Joi.number().min(0).optional(), 
   
   materialCost: Joi.number().min(0).default(0),
-  dieselCost: Joi.number().min(0).default(0),
+  dieselCost: Joi.number().optional(),
+  dieselRate: Joi.number().min(0).default(0),
   dieselInLitters: Joi.number().min(0).default(0),
   fuelCompany: Joi.string().trim().regex(objectIdRegEx).required().messages({
     "string.pattern.base": "Invalid Fuel Company Reference ID.",

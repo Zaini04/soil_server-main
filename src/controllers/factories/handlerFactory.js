@@ -378,7 +378,7 @@ exports.exportExcel = (Model, options) =>
 
 exports.exportPdf = (Model, options) =>
   catchAsync(async (req, res) => {
-    const { columns = [], title: getTitle, toLabel } = options;
+    const { columns = [], title: getTitle, toLabel ,landscape = false } = options;
     const logoPath = options.logoPath || LOGO_PATH;
     const records = options.fetchRecords
       ? await options.fetchRecords(req)
@@ -404,7 +404,7 @@ exports.exportPdf = (Model, options) =>
       ? toLabel(records)
       : (toLabel || null);
 
-    const doc = new PDFDocument({ margin: 30, size: "A4" });
+    const doc = new PDFDocument({ margin: 30, size: "A4",layout : landscape ? "landscape" : "portrait"});
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",

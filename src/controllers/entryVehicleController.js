@@ -115,6 +115,7 @@ exports.exportEntryVehicleRecordsPdf = handlerFactory.exportPdf(EntryVehicle, {
   columns: entryVehiclesRecordColumns,
   totalsConfig: entryVehiclesTotals,
   title:  "Entry Vehicle Records",
+  landscape:true
 });
 
 
