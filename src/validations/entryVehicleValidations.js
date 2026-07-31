@@ -129,7 +129,7 @@ const GETJoiEntryVehicleSchema = Joi.object({
   client: Joi.string().optional().allow(''),
   clientName: Joi.string().optional().allow(''),
   fuelCompany:Joi.string().optional().allow(''),
-  site: Joi.string().regex(objectIdRegEx).optional(),
+  site: Joi.string().optional().allow(''),
   vehicle: Joi.string().optional().allow(''),
   vehicleNo: Joi.string().optional().allow(""),
   paymentStatus: Joi.string().valid("pending", "partial", "received").optional(),

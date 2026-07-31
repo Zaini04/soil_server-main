@@ -77,7 +77,7 @@ exports.getAllCompanyExpenses = catchAsync(async (req, res, next) => {
 });
 
 exports.getCompanyExpenseSummary = catchAsync(async (req, res, next) => {
-  const { client, from, to } = req.query;
+  const { client, site, from, to } = req.query;
 
   if (!client) {
     return next(new AppError("Client id is required.", 400));
@@ -96,19 +96,40 @@ exports.getCompanyExpenseSummary = catchAsync(async (req, res, next) => {
   }
 
   const Client = require("../models/clientModel");
+  const Site = require("../models/siteModel");
+
   const clientDoc = await Client.findById(client).select("name phoneNumber");
   if (!clientDoc) {
     return next(new AppError("Client not found.", 404));
   }
 
+  let siteDoc = null;
+  if (site) {
+    // Ensure the site belongs to this client
+    siteDoc = await Site.findOne({ _id: site, client: clientDoc._id }).select("siteName address");
+    if (!siteDoc) {
+      return next(new AppError("Site not found for this client.", 404));
+    }
+  }
+
+  const matchStage = {
+    client: clientDoc._id,
+    date: { $gte: startDate, $lte: endDate },
+  };
+
+  if (siteDoc) {
+    matchStage.site = siteDoc._id;
+  }
+
   const agg = await CompanyRecords.aggregate([
+    { $match: matchStage },
     {
-      $match: {
-        client: clientDoc._id,
-        date: { $gte: startDate, $lte: endDate },
+      $group: {
+        _id: null,
+        totalSpent: { $sum: "$totalRate" },
+        totalSft: { $sum: "$totalSft" },
       },
     },
-    { $group: { _id: null, totalSpent: { $sum: "$totalRate" }, totalSft: { $sum: "$totalSft" } } },
   ]);
 
   const totalSpent = agg[0]?.totalSpent || 0;
@@ -120,6 +141,13 @@ exports.getCompanyExpenseSummary = catchAsync(async (req, res, next) => {
       name: clientDoc.name,
       phoneNumber: clientDoc.phoneNumber,
     },
+    site: siteDoc
+      ? {
+          _id: siteDoc._id,
+          siteName: siteDoc.siteName,
+          address: siteDoc.address,
+        }
+      : null,
     totalSpent,
     totalSft,
     period: { from: startDate, to: endDate },
@@ -187,11 +215,18 @@ const clientSummaryTotalsConfig = [
 
 const fetchSingleClientRecords = async (req) => {
   const { startDate, endDate } = getExportPeriod(req);
+  const {client,site} = req.query
 
-  return CompanyRecords.find({
-    client: req.query.client,
+  const filter ={
+    client,
     date: { $gte: startDate, $lte: endDate },
-  })
+  }
+
+  if(site){
+    filter.site = site
+  }
+
+  return CompanyRecords.find(filter)
     .populate([
       { path: "createdBy", select: "username" },
       { path: "client", select: "name phoneNumber" },
@@ -658,8 +693,20 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
     doc.rect(pageLeft, y, tableWidth, rowHeight).stroke();
   };
 
+      const PAGE_LEFT   = 30;
+          const PAGE_RIGHT  = doc.page.width - 30;
+
+
+
+
 
   const headerY = 30;
+      const headerH    = 60;
+
+          const TABLE_WIDTH = PAGE_RIGHT - PAGE_LEFT;
+
+
+
   let headerHeight = 60;
 
   try {
@@ -690,9 +737,9 @@ exports.exportCompanyRecordsPdf = catchAsync(async (req, res) => {
   .font("Helvetica-Bold")
   .fontSize(13)
   .text(
-    toText ? `To: ${toText}` : "",
+    clientName ? `To: ${clientName}` : "",
     PAGE_LEFT,
-    headerY + headerH + 1,
+    headerY + headerHeight + 1,
     { width: TABLE_WIDTH / 2, align: "left" }
   );
 
@@ -703,7 +750,7 @@ doc
   .text(
     `Date: ${new Date().toLocaleDateString("en-GB")}`,
     PAGE_LEFT,
-    headerY + headerH + 1,
+    headerY + headerHeight + 1,
     { width: TABLE_WIDTH, align: "right" }
   );
 
