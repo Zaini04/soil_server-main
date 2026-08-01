@@ -7,8 +7,8 @@ const router = require("express").Router();
 router.post("/add_employee" ,protect,printRequest,checkActionAccess("employee","create"), addEmployee);
 router.post("/add_employee_expense" ,protect,printRequest,checkActionAccess("employee","create"), addEmployeeExpense);
 
-router.get('/all_employees' ,protect, printRequest  , checkActionAccess("emoloyee","view") , getAllEmployee);
-router.get('/all_employees_expenses' ,protect, printRequest  , checkActionAccess("emoloyee","view") , getAllEmployeeExpense);
+router.get('/all_employees' ,protect, printRequest  , checkActionAccess("employee","view") , getAllEmployee);
+router.get('/all_employees_expenses' ,protect, printRequest  , checkActionAccess("employee","view") , getAllEmployeeExpense);
 router.get('/employees_list' ,protect, printRequest  , checkActionAccess("employee","view") , getEmployeeDropdownList);
 
 

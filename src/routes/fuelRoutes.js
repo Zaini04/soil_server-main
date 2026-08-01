@@ -13,8 +13,8 @@ router.route('/:id')
     .delete(printRequest , protect , checkActionAccess("fuel-stock","delete"), deleteFuelStock )
 
 
-    router.post("/add_fuel_company" ,protect,printRequest,checkActionAccess("fuel-stock","create"), addFuelCompany);
-router.get('/all_fuel_companies' ,protect, printRequest  , checkActionAccess("fuel-stock","view") , getAllFuelCompanies);
+    router.post("/add_fuel_company" ,protect,printRequest,checkActionAccess("fuel-company","create"), addFuelCompany);
+router.get('/all_fuel_companies' ,protect, printRequest  , checkActionAccess("fuel-company","view") , getAllFuelCompanies);
 router.get('/all_fuel_companies_list' ,protect, printRequest  , checkActionAccess("fuel-stock","view") , getAllFuelStockCompanies);
 router.get('/all_fuel_stock_companies_list' ,protect, printRequest  , checkActionAccess("fuel-stock","view") , getAllFuelCompaniesWithStock);
 router.get('/entry_fuels' ,protect, printRequest  , checkActionAccess("entry-fuel","view") , getEntryFuels);
